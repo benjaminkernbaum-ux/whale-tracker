@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MONITOR DE BALEIAS — Smart Money Avançado</title>
-    <meta name="description" content="Monitore movimentos institucionais e de baleias em commodities, índices, ações e crypto. Surfe a onda junto com o smart money.">
+    <title>WhaleVault — Smart Money Avançado</title>
+    <meta name="description" content="Monitore movimentos institucionais e de baleias em commodities, índices, ações e crypto. Dados ao vivo via CoinGecko API.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,8 +18,8 @@
     <div id="splash-loader" class="splash-loader">
         <div class="splash-content">
             <div class="splash-whale">🐋</div>
-            <h1 class="splash-title">MONITOR DE BALEIAS</h1>
-            <p class="splash-sub">Inicializando Inteligência Smart Money...</p>
+            <h1 class="splash-title">WHALEVAULT</h1>
+            <p class="splash-sub">Inicializando Smart Money + Live Data...</p>
             <div class="splash-bar"><div class="splash-bar-fill"></div></div>
         </div>
     </div>
@@ -34,7 +34,7 @@
                 </button>
                 <div class="logo">
                     <span class="logo-icon">🐋</span>
-                    <span class="logo-text">MONITOR<span class="logo-accent"> DE BALEIAS</span></span>
+                    <span class="logo-text">WHALE<span class="logo-accent">VAULT</span></span>
                 </div>
                 <div class="mode-badge" id="mode-badge">
                     <span class="mode-dot"></span>
@@ -201,6 +201,36 @@
                     <div class="alert-feed-container">
                         <div id="alert-feed" class="alert-feed"></div>
                     </div>
+                    <div class="leaderboard-section">
+                        <div class="leaderboard-header">
+                            <h3 class="subsection-title">🏆 Smart Money Leaderboard</h3>
+                            <div class="leaderboard-controls">
+                                <select id="leaderboard-sort" class="control-select" onchange="renderLeaderboard()">
+                                    <option value="pnl">🔥 Ordenar por P&L</option>
+                                    <option value="winrate">🎯 Ordenar por Win Rate</option>
+                                    <option value="volume">📊 Ordenar por Volume</option>
+                                    <option value="reputation">⭐ Ordenar por Reputação</option>
+                                </select>
+                                <select id="leaderboard-filter" class="control-select" onchange="renderLeaderboard()">
+                                    <option value="all">Todos</option>
+                                    <option value="institutional">🏛️ Institucional</option>
+                                    <option value="crypto">🐋 Crypto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="leaderboard-table">
+                            <div class="lb-header-row">
+                                <div class="lb-rank">#</div>
+                                <div class="lb-entity">Entidade</div>
+                                <div class="lb-stat">AUM</div>
+                                <div class="lb-stat">Win Rate</div>
+                                <div class="lb-stat">P&L 90d</div>
+                                <div class="lb-stat">Vol. Total</div>
+                                <div class="lb-stat">TXs</div>
+                            </div>
+                            <div id="leaderboard-body"></div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- SECTION: MARKET OVERVIEW -->
@@ -276,18 +306,35 @@
                             <h3>Nenhuma Carteira Rastreada</h3>
                             <p>Digite um endereço ou selecione uma carteira demo abaixo</p>
                             <div class="sample-wallets">
-                                <p class="sample-label">Carteiras e fundos demo:</p>
-                                <button class="sample-wallet-btn" data-address="0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18">
-                                    <span class="wallet-tag">Baleia Crypto #1</span>
-                                    <span class="wallet-addr">0x742d...bD18</span>
+                                <p class="sample-label">🐋 Carteiras Crypto Conhecidas:</p>
+                                <button class="sample-wallet-btn" data-address="0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503">
+                                    <span class="wallet-tag">Binance Cold Wallet</span>
+                                    <span class="wallet-addr">0x47ac...D503</span>
                                 </button>
-                                <button class="sample-wallet-btn" data-address="BRIDGEWATER-ASSOCIATES">
-                                    <span class="wallet-tag">Bridgewater</span>
-                                    <span class="wallet-addr">Fundo Institucional</span>
+                                <button class="sample-wallet-btn" data-address="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045">
+                                    <span class="wallet-tag">Vitalik Buterin</span>
+                                    <span class="wallet-addr">0xd8dA...6045</span>
                                 </button>
-                                <button class="sample-wallet-btn" data-address="BERKSHIRE-HATHAWAY">
+                                <button class="sample-wallet-btn" data-address="0xf584F8728B874a6a5c7A8d4d387C9aae9172D621">
+                                    <span class="wallet-tag">Jump Trading</span>
+                                    <span class="wallet-addr">0xf584...D621</span>
+                                </button>
+                                <button class="sample-wallet-btn" data-address="0x0000006daea1723962647b7e189d311d757Fb793">
+                                    <span class="wallet-tag">Wintermute</span>
+                                    <span class="wallet-addr">0x0000...b793</span>
+                                </button>
+                                <p class="sample-label" style="margin-top:12px">🏦 Fundos Institucionais:</p>
+                                <button class="sample-wallet-btn" data-address="bridgewater associates">
+                                    <span class="wallet-tag">Bridgewater Associates</span>
+                                    <span class="wallet-addr">Ray Dalio • AUM $124B</span>
+                                </button>
+                                <button class="sample-wallet-btn" data-address="blackrock">
+                                    <span class="wallet-tag">BlackRock Inc.</span>
+                                    <span class="wallet-addr">Larry Fink • AUM $10.5T</span>
+                                </button>
+                                <button class="sample-wallet-btn" data-address="berkshire hathaway">
                                     <span class="wallet-tag">Berkshire Hathaway</span>
-                                    <span class="wallet-addr">Warren Buffett</span>
+                                    <span class="wallet-addr">Warren Buffett • AUM $370B</span>
                                 </button>
                             </div>
                         </div>
@@ -528,12 +575,12 @@
                             </div>
                         </div>
                         <div class="settings-card">
-                            <h3 class="settings-card-title">ℹ️ Sobre o Monitor de Baleias</h3>
+                            <h3 class="settings-card-title">ℹ️ Sobre o WhaleVault</h3>
                             <div class="about-info">
-                                <p><strong>Versão:</strong> 2.0.0 — Monitor de Baleias</p>
-                                <p><strong>Foco:</strong> Ouro, Petróleo, Prata, Índices, Ações & Crypto selecionado</p>
-                                <p><strong>Stack:</strong> Vanilla JS + TradingView Charts + Chart.js</p>
-                                <p class="about-desc">Monitor de Baleias é um dashboard de inteligência smart money que monitora movimentos institucionais em commodities, índices, ações e criptomoedas para te ajudar a ficar à frente do mercado.</p>
+                                <p><strong>Versão:</strong> 3.0.0 — WhaleVault Live</p>
+                                <p><strong>Foco:</strong> Ouro, Petróleo, Prata, Índices, Ações & Crypto com dados ao vivo</p>
+                                <p><strong>Stack:</strong> Vanilla JS + LightweightCharts + Chart.js + CoinGecko API</p>
+                                <p class="about-desc">WhaleVault é um dashboard de inteligência smart money que monitora movimentos institucionais com dados ao vivo de crypto via CoinGecko. Commodities, índices e ações usam dados simulados enriquecidos.</p>
                             </div>
                         </div>
                     </div>
