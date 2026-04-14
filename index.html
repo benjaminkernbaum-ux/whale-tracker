@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhaleVault — Smart Money Avançado</title>
-    <meta name="description" content="Monitore movimentos institucionais e de baleias em commodities, índices, ações e crypto. Dados ao vivo via CoinGecko API.">
+    <title>WhaleVault — Institutional Intelligence Terminal</title>
+    <meta name="description" content="Track institutional and whale movements across commodities, indices, equities and crypto. Live data via CoinGecko API.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
         <div class="splash-content">
             <div class="splash-whale">🐋</div>
             <h1 class="splash-title">WHALEVAULT</h1>
-            <p class="splash-sub">Inicializando Smart Money + Live Data...</p>
+            <p class="splash-sub">Initializing Smart Money Intelligence...</p>
             <div class="splash-bar"><div class="splash-bar-fill"></div></div>
         </div>
     </div>
@@ -29,7 +29,7 @@
         <!-- HEADER BAR -->
         <header id="header-bar" class="header-bar">
             <div class="header-left">
-                <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Alternar menu">
+                <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
                 </button>
                 <div class="logo">
@@ -44,12 +44,12 @@
             <div class="header-center">
                 <div class="ticker-strip" id="ticker-strip">
                     <div class="ticker-item" id="ticker-gold">
-                        <span class="ticker-symbol">OURO</span>
+                        <span class="ticker-symbol">GOLD</span>
                         <span class="ticker-price" id="price-gold">—</span>
                         <span class="ticker-change" id="change-gold">—</span>
                     </div>
                     <div class="ticker-item" id="ticker-oil">
-                        <span class="ticker-symbol">PETRÓLEO</span>
+                        <span class="ticker-symbol">OIL</span>
                         <span class="ticker-price" id="price-oil">—</span>
                         <span class="ticker-change" id="change-oil">—</span>
                     </div>
@@ -64,7 +64,7 @@
                         <span class="ticker-change" id="change-us500">—</span>
                     </div>
                     <div class="ticker-item fear-greed" id="ticker-fng">
-                        <span class="ticker-symbol">MEDO&GANÂNCIA</span>
+                        <span class="ticker-symbol">FEAR&GREED</span>
                         <span class="ticker-price" id="fng-value">—</span>
                         <span class="ticker-change" id="fng-label">—</span>
                     </div>
@@ -73,12 +73,16 @@
             <div class="header-right">
                 <div class="search-trigger" id="search-trigger">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <span>Buscar</span>
+                    <span>Search</span>
                     <kbd>Ctrl+K</kbd>
                 </div>
+                <a href="https://github.com/gustavglobalb-boop/whale-tracker" target="_blank" rel="noopener noreferrer" class="github-btn" id="github-btn" title="View on GitHub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    <span>GitHub</span>
+                </a>
                 <div class="connection-status" id="connection-status">
                     <span class="status-dot live"></span>
-                    <span class="status-text">Conectado</span>
+                    <span class="status-text">Connected</span>
                 </div>
             </div>
         </header>
@@ -88,7 +92,7 @@
             <div class="search-modal-content">
                 <div class="search-input-wrap">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input type="text" id="search-input" placeholder="Buscar ativos, carteiras, tópicos..." autocomplete="off">
+                    <input type="text" id="search-input" placeholder="Search assets, wallets, topics..." autocomplete="off">
                     <kbd>ESC</kbd>
                 </div>
                 <div id="search-results" class="search-results"></div>
@@ -102,51 +106,51 @@
             <!-- SIDEBAR -->
             <nav id="sidebar" class="sidebar">
                 <div class="nav-section">
-                    <span class="nav-section-label">INTELIGÊNCIA</span>
+                    <span class="nav-section-label">INTELLIGENCE</span>
                     <a href="#whale-alerts" class="nav-item active" data-section="whale-alerts" id="nav-whale-alerts">
                         <span class="nav-icon">🐋</span>
-                        <span class="nav-label">Alertas de Baleias</span>
+                        <span class="nav-label">Whale Alerts</span>
                         <span class="nav-badge" id="alert-count">0</span>
                     </a>
                     <a href="#market-overview" class="nav-item" data-section="market-overview" id="nav-market-overview">
                         <span class="nav-icon">📊</span>
-                        <span class="nav-label">Visão de Mercado</span>
+                        <span class="nav-label">Market Overview</span>
                     </a>
                     <a href="#wallet-tracker" class="nav-item" data-section="wallet-tracker" id="nav-wallet-tracker">
                         <span class="nav-icon">🔍</span>
-                        <span class="nav-label">Rastreio de Carteiras</span>
+                        <span class="nav-label">Wallet Tracker</span>
                     </a>
                     <a href="#volume-scanner" class="nav-item" data-section="volume-scanner" id="nav-volume-scanner">
                         <span class="nav-icon">📈</span>
-                        <span class="nav-label">Scanner de Volume</span>
+                        <span class="nav-label">Volume Scanner</span>
                     </a>
                 </div>
                 <div class="nav-section">
-                    <span class="nav-section-label">ANÁLISE</span>
+                    <span class="nav-section-label">ANALYSIS</span>
                     <a href="#cohort-analysis" class="nav-item" data-section="cohort-analysis" id="nav-cohort-analysis">
                         <span class="nav-icon">👥</span>
-                        <span class="nav-label">Análise de Coorte</span>
+                        <span class="nav-label">Cohort Analysis</span>
                     </a>
                     <a href="#community-intel" class="nav-item" data-section="community-intel" id="nav-community-intel">
                         <span class="nav-icon">💬</span>
-                        <span class="nav-label">Inteligência Social</span>
+                        <span class="nav-label">Social Intelligence</span>
                     </a>
                 </div>
                 <div class="nav-section">
-                    <span class="nav-section-label">FONTES DE DADOS</span>
+                    <span class="nav-section-label">DATA FEEDS</span>
                     <a href="#data-sources" class="nav-item" data-section="data-sources" id="nav-data-sources">
                         <span class="nav-icon">🌐</span>
-                        <span class="nav-label">Fontes & POV</span>
+                        <span class="nav-label">Sources & POV</span>
                     </a>
                     <a href="#settings" class="nav-item" data-section="settings" id="nav-settings">
                         <span class="nav-icon">⚙️</span>
-                        <span class="nav-label">Configurações</span>
+                        <span class="nav-label">Settings</span>
                     </a>
                 </div>
                 <div class="sidebar-footer">
                     <div class="data-freshness">
                         <span class="freshness-dot"></span>
-                        <span id="last-update">Última atualização: —</span>
+                        <span id="last-update">Last update: —</span>
                     </div>
                 </div>
             </nav>
@@ -158,43 +162,43 @@
                 <section id="section-whale-alerts" class="section active">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">🐋 Alertas de Baleias</h1>
-                            <p class="section-subtitle">Movimentos institucionais em tempo real • Commodities, Índices, Ações & Crypto</p>
+                            <h1 class="section-title">🐋 Whale Alerts</h1>
+                            <p class="section-subtitle">Real-time institutional movements • Commodities, Indices, Equities & Crypto</p>
                         </div>
                         <div class="section-controls">
                             <select id="alert-chain-filter" class="control-select">
-                                <option value="all">Todos os Mercados</option>
+                                <option value="all">All Markets</option>
                                 <option value="commodities">🥇 Commodities</option>
-                                <option value="indices">📊 Índices</option>
-                                <option value="equities">📈 Ações</option>
+                                <option value="indices">📊 Indices</option>
+                                <option value="equities">📈 Equities</option>
                                 <option value="crypto">₿ Crypto</option>
                             </select>
                             <select id="alert-impact-filter" class="control-select">
-                                <option value="all">Todo Impacto</option>
-                                <option value="high">🔴 Alto</option>
-                                <option value="medium">🟡 Médio</option>
-                                <option value="low">🟢 Baixo</option>
+                                <option value="all">All Impact</option>
+                                <option value="high">🔴 High</option>
+                                <option value="medium">🟡 Medium</option>
+                                <option value="low">🟢 Low</option>
                             </select>
-                            <button id="alert-pause" class="control-btn" title="Pausar feed">
+                            <button id="alert-pause" class="control-btn" title="Pause feed">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                             </button>
                         </div>
                     </div>
                     <div class="alert-stats-row" id="alert-stats-row">
                         <div class="stat-card glow-indigo">
-                            <span class="stat-label">Total Movimentos (24h)</span>
+                            <span class="stat-label">Total Movements (24h)</span>
                             <span class="stat-value" id="stat-total-txns">0</span>
                         </div>
                         <div class="stat-card glow-green">
-                            <span class="stat-label">Volume Movido (24h)</span>
+                            <span class="stat-label">Volume Moved (24h)</span>
                             <span class="stat-value" id="stat-volume-moved">$0</span>
                         </div>
                         <div class="stat-card glow-red">
-                            <span class="stat-label">Maior Operação</span>
+                            <span class="stat-label">Largest Trade</span>
                             <span class="stat-value" id="stat-largest-txn">$0</span>
                         </div>
                         <div class="stat-card glow-amber">
-                            <span class="stat-label">Baleias Ativas</span>
+                            <span class="stat-label">Active Whales</span>
                             <span class="stat-value" id="stat-active-whales">0</span>
                         </div>
                     </div>
@@ -206,14 +210,14 @@
                             <h3 class="subsection-title">🏆 Smart Money Leaderboard</h3>
                             <div class="leaderboard-controls">
                                 <select id="leaderboard-sort" class="control-select" onchange="renderLeaderboard()">
-                                    <option value="pnl">🔥 Ordenar por P&L</option>
-                                    <option value="winrate">🎯 Ordenar por Win Rate</option>
-                                    <option value="volume">📊 Ordenar por Volume</option>
-                                    <option value="reputation">⭐ Ordenar por Reputação</option>
+                                    <option value="pnl">🔥 Sort by P&L</option>
+                                    <option value="winrate">🎯 Sort by Win Rate</option>
+                                    <option value="volume">📊 Sort by Volume</option>
+                                    <option value="reputation">⭐ Sort by AUM</option>
                                 </select>
                                 <select id="leaderboard-filter" class="control-select" onchange="renderLeaderboard()">
-                                    <option value="all">Todos</option>
-                                    <option value="institutional">🏛️ Institucional</option>
+                                    <option value="all">All</option>
+                                    <option value="institutional">🏛️ Institutional</option>
                                     <option value="crypto">🐋 Crypto</option>
                                 </select>
                             </div>
@@ -221,11 +225,11 @@
                         <div class="leaderboard-table">
                             <div class="lb-header-row">
                                 <div class="lb-rank">#</div>
-                                <div class="lb-entity">Entidade</div>
+                                <div class="lb-entity">Entity</div>
                                 <div class="lb-stat">AUM</div>
                                 <div class="lb-stat">Win Rate</div>
                                 <div class="lb-stat">P&L 90d</div>
-                                <div class="lb-stat">Vol. Total</div>
+                                <div class="lb-stat">Total Vol.</div>
                                 <div class="lb-stat">TXs</div>
                             </div>
                             <div id="leaderboard-body"></div>
@@ -237,23 +241,23 @@
                 <section id="section-market-overview" class="section">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">📊 Visão de Mercado</h1>
-                            <p class="section-subtitle">Commodities, Índices, Ações & Crypto • Cor por variação 24h</p>
+                            <h1 class="section-title">📊 Market Overview</h1>
+                            <p class="section-subtitle">Commodities, Indices, Equities & Crypto • Color by 24h change</p>
                         </div>
                         <div class="section-controls">
                             <div class="view-toggle" id="market-view-toggle">
-                                <button class="view-btn active" data-view="heatmap">Mapa de Calor</button>
-                                <button class="view-btn" data-view="table">Tabela</button>
+                                <button class="view-btn active" data-view="heatmap">Heatmap</button>
+                                <button class="view-btn" data-view="table">Table</button>
                             </div>
                         </div>
                     </div>
                     <div class="market-overview-stats" id="market-overview-stats">
                         <div class="stat-card glow-amber">
-                            <span class="stat-label">Ouro (XAU/USD)</span>
+                            <span class="stat-label">Gold (XAU/USD)</span>
                             <span class="stat-value" id="stat-gold-price">—</span>
                         </div>
                         <div class="stat-card glow-indigo">
-                            <span class="stat-label">Petróleo (WTI)</span>
+                            <span class="stat-label">Crude Oil (WTI)</span>
                             <span class="stat-value" id="stat-oil-price">—</span>
                         </div>
                         <div class="stat-card glow-green">
@@ -271,13 +275,13 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Ativo</th>
-                                    <th>Preço</th>
+                                    <th>Asset</th>
+                                    <th>Price</th>
                                     <th>24h %</th>
                                     <th>7d %</th>
-                                    <th>Classe</th>
+                                    <th>Class</th>
                                     <th>Volume (24h)</th>
-                                    <th>Gráfico</th>
+                                    <th>Chart</th>
                                 </tr>
                             </thead>
                             <tbody id="market-table-body"></tbody>
@@ -289,24 +293,24 @@
                 <section id="section-wallet-tracker" class="section">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">🔍 Rastreio de Carteiras & Posições</h1>
-                            <p class="section-subtitle">Rastreie carteiras de baleias em crypto e posições institucionais</p>
+                            <h1 class="section-title">🔍 Wallet & Position Tracker</h1>
+                            <p class="section-subtitle">Track crypto whale wallets and institutional positions</p>
                         </div>
                     </div>
                     <div class="wallet-search-bar">
                         <div class="wallet-input-wrap">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input type="text" id="wallet-search-input" placeholder="Endereço Ethereum (0x...) ou nome de fundo institucional" autocomplete="off">
-                            <button id="wallet-search-btn" class="btn-primary">Rastrear</button>
+                            <input type="text" id="wallet-search-input" placeholder="Ethereum address (0x...) or institutional fund name" autocomplete="off">
+                            <button id="wallet-search-btn" class="btn-primary">Track</button>
                         </div>
                     </div>
                     <div class="tracked-wallets" id="tracked-wallets">
                         <div class="empty-state" id="wallet-empty-state">
                             <span class="empty-icon">🔍</span>
-                            <h3>Nenhuma Carteira Rastreada</h3>
-                            <p>Digite um endereço ou selecione uma carteira demo abaixo</p>
+                            <h3>No Wallets Tracked</h3>
+                            <p>Enter an address or select a demo wallet below</p>
                             <div class="sample-wallets">
-                                <p class="sample-label">🐋 Carteiras Crypto Conhecidas:</p>
+                                <p class="sample-label">🐋 Known Crypto Wallets:</p>
                                 <button class="sample-wallet-btn" data-address="0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503">
                                     <span class="wallet-tag">Binance Cold Wallet</span>
                                     <span class="wallet-addr">0x47ac...D503</span>
@@ -323,7 +327,7 @@
                                     <span class="wallet-tag">Wintermute</span>
                                     <span class="wallet-addr">0x0000...b793</span>
                                 </button>
-                                <p class="sample-label" style="margin-top:12px">🏦 Fundos Institucionais:</p>
+                                <p class="sample-label" style="margin-top:14px">🏦 Institutional Funds:</p>
                                 <button class="sample-wallet-btn" data-address="bridgewater associates">
                                     <span class="wallet-tag">Bridgewater Associates</span>
                                     <span class="wallet-addr">Ray Dalio • AUM $124B</span>
@@ -346,29 +350,29 @@
                 <section id="section-volume-scanner" class="section">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">📈 Scanner de Volume</h1>
-                            <p class="section-subtitle">Detectar surtos anormais de volume em todos os mercados</p>
+                            <h1 class="section-title">📈 Volume Scanner</h1>
+                            <p class="section-subtitle">Detect abnormal volume spikes across all markets</p>
                         </div>
                         <div class="section-controls">
                             <select id="volume-timeframe" class="control-select">
-                                <option value="7d">vs Média 7d</option>
-                                <option value="30d">vs Média 30d</option>
+                                <option value="7d">vs 7d Avg</option>
+                                <option value="30d">vs 30d Avg</option>
                             </select>
                             <select id="volume-min-spike" class="control-select">
-                                <option value="1.5">≥1.5x Pico</option>
-                                <option value="2">≥2x Pico</option>
-                                <option value="3">≥3x Pico</option>
-                                <option value="5">≥5x Pico</option>
+                                <option value="1.5">≥1.5x Spike</option>
+                                <option value="2">≥2x Spike</option>
+                                <option value="3">≥3x Spike</option>
+                                <option value="5">≥5x Spike</option>
                             </select>
                         </div>
                     </div>
                     <div class="volume-scanner-grid" id="volume-scanner-grid"></div>
                     <div class="volume-chart-section">
-                        <h3 class="subsection-title">Histórico de Volume — Ativo Selecionado</h3>
+                        <h3 class="subsection-title">Volume History — Selected Asset</h3>
                         <div id="volume-chart-container" class="chart-container">
                             <div class="empty-state small">
                                 <span class="empty-icon">📈</span>
-                                <p>Clique em um ativo acima para ver o histórico de volume</p>
+                                <p>Click an asset above to view volume history</p>
                             </div>
                         </div>
                     </div>
@@ -378,79 +382,79 @@
                 <section id="section-cohort-analysis" class="section">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">👥 Análise de Coorte</h1>
-                            <p class="section-subtitle">Posicionamento por tier de investidor • Institucional vs Varejo</p>
+                            <h1 class="section-title">👥 Cohort Analysis</h1>
+                            <p class="section-subtitle">Positioning by investor tier • Institutional vs Retail</p>
                         </div>
                     </div>
                     <div class="cohort-tiers" id="cohort-tiers">
                         <div class="cohort-card" data-tier="megalodon">
                             <div class="cohort-header">
                                 <span class="cohort-icon">🏦</span>
-                                <span class="cohort-name">Institucional</span>
+                                <span class="cohort-name">Institutional</span>
                                 <span class="cohort-range">$100M+</span>
                             </div>
                             <div class="cohort-body">
-                                <div class="cohort-stat"><span class="cohort-stat-label">Entidades</span><span class="cohort-stat-value" id="megalodon-count">—</span></div>
-                                <div class="cohort-stat"><span class="cohort-stat-label">Posição Média</span><span class="cohort-stat-value" id="megalodon-position">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Entities</span><span class="cohort-stat-value" id="megalodon-count">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Avg Position</span><span class="cohort-stat-value" id="megalodon-position">—</span></div>
                                 <div class="cohort-bar-container"><div class="cohort-bar long" id="megalodon-long" style="width:50%"></div><div class="cohort-bar short" id="megalodon-short" style="width:50%"></div></div>
-                                <div class="cohort-bar-labels"><span class="long-label" id="megalodon-long-pct">50% Comprado</span><span class="short-label" id="megalodon-short-pct">50% Vendido</span></div>
+                                <div class="cohort-bar-labels"><span class="long-label" id="megalodon-long-pct">50% Long</span><span class="short-label" id="megalodon-short-pct">50% Short</span></div>
                             </div>
                         </div>
                         <div class="cohort-card" data-tier="whale">
                             <div class="cohort-header">
                                 <span class="cohort-icon">🐋</span>
-                                <span class="cohort-name">Baleia</span>
+                                <span class="cohort-name">Whale</span>
                                 <span class="cohort-range">$10M–$100M</span>
                             </div>
                             <div class="cohort-body">
-                                <div class="cohort-stat"><span class="cohort-stat-label">Entidades</span><span class="cohort-stat-value" id="whale-count">—</span></div>
-                                <div class="cohort-stat"><span class="cohort-stat-label">Posição Média</span><span class="cohort-stat-value" id="whale-position">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Entities</span><span class="cohort-stat-value" id="whale-count">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Avg Position</span><span class="cohort-stat-value" id="whale-position">—</span></div>
                                 <div class="cohort-bar-container"><div class="cohort-bar long" id="whale-long" style="width:50%"></div><div class="cohort-bar short" id="whale-short" style="width:50%"></div></div>
-                                <div class="cohort-bar-labels"><span class="long-label" id="whale-long-pct">50% Comprado</span><span class="short-label" id="whale-short-pct">50% Vendido</span></div>
+                                <div class="cohort-bar-labels"><span class="long-label" id="whale-long-pct">50% Long</span><span class="short-label" id="whale-short-pct">50% Short</span></div>
                             </div>
                         </div>
                         <div class="cohort-card" data-tier="dolphin">
                             <div class="cohort-header">
                                 <span class="cohort-icon">🐬</span>
-                                <span class="cohort-name">Golfinho</span>
+                                <span class="cohort-name">Dolphin</span>
                                 <span class="cohort-range">$1M–$10M</span>
                             </div>
                             <div class="cohort-body">
-                                <div class="cohort-stat"><span class="cohort-stat-label">Entidades</span><span class="cohort-stat-value" id="dolphin-count">—</span></div>
-                                <div class="cohort-stat"><span class="cohort-stat-label">Posição Média</span><span class="cohort-stat-value" id="dolphin-position">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Entities</span><span class="cohort-stat-value" id="dolphin-count">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Avg Position</span><span class="cohort-stat-value" id="dolphin-position">—</span></div>
                                 <div class="cohort-bar-container"><div class="cohort-bar long" id="dolphin-long" style="width:50%"></div><div class="cohort-bar short" id="dolphin-short" style="width:50%"></div></div>
-                                <div class="cohort-bar-labels"><span class="long-label" id="dolphin-long-pct">50% Comprado</span><span class="short-label" id="dolphin-short-pct">50% Vendido</span></div>
+                                <div class="cohort-bar-labels"><span class="long-label" id="dolphin-long-pct">50% Long</span><span class="short-label" id="dolphin-short-pct">50% Short</span></div>
                             </div>
                         </div>
                         <div class="cohort-card" data-tier="fish">
                             <div class="cohort-header">
                                 <span class="cohort-icon">🐟</span>
-                                <span class="cohort-name">Peixe</span>
+                                <span class="cohort-name">Fish</span>
                                 <span class="cohort-range">$100K–$1M</span>
                             </div>
                             <div class="cohort-body">
-                                <div class="cohort-stat"><span class="cohort-stat-label">Entidades</span><span class="cohort-stat-value" id="fish-count">—</span></div>
-                                <div class="cohort-stat"><span class="cohort-stat-label">Posição Média</span><span class="cohort-stat-value" id="fish-position">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Entities</span><span class="cohort-stat-value" id="fish-count">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Avg Position</span><span class="cohort-stat-value" id="fish-position">—</span></div>
                                 <div class="cohort-bar-container"><div class="cohort-bar long" id="fish-long" style="width:50%"></div><div class="cohort-bar short" id="fish-short" style="width:50%"></div></div>
-                                <div class="cohort-bar-labels"><span class="long-label" id="fish-long-pct">50% Comprado</span><span class="short-label" id="fish-short-pct">50% Vendido</span></div>
+                                <div class="cohort-bar-labels"><span class="long-label" id="fish-long-pct">50% Long</span><span class="short-label" id="fish-short-pct">50% Short</span></div>
                             </div>
                         </div>
                         <div class="cohort-card" data-tier="shrimp">
                             <div class="cohort-header">
                                 <span class="cohort-icon">🦐</span>
-                                <span class="cohort-name">Varejo</span>
+                                <span class="cohort-name">Retail</span>
                                 <span class="cohort-range">&lt;$100K</span>
                             </div>
                             <div class="cohort-body">
-                                <div class="cohort-stat"><span class="cohort-stat-label">Entidades</span><span class="cohort-stat-value" id="shrimp-count">—</span></div>
-                                <div class="cohort-stat"><span class="cohort-stat-label">Posição Média</span><span class="cohort-stat-value" id="shrimp-position">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Entities</span><span class="cohort-stat-value" id="shrimp-count">—</span></div>
+                                <div class="cohort-stat"><span class="cohort-stat-label">Avg Position</span><span class="cohort-stat-value" id="shrimp-position">—</span></div>
                                 <div class="cohort-bar-container"><div class="cohort-bar long" id="shrimp-long" style="width:50%"></div><div class="cohort-bar short" id="shrimp-short" style="width:50%"></div></div>
-                                <div class="cohort-bar-labels"><span class="long-label" id="shrimp-long-pct">50% Comprado</span><span class="short-label" id="shrimp-short-pct">50% Vendido</span></div>
+                                <div class="cohort-bar-labels"><span class="long-label" id="shrimp-long-pct">50% Long</span><span class="short-label" id="shrimp-short-pct">50% Short</span></div>
                             </div>
                         </div>
                     </div>
                     <div class="cohort-timeline-section">
-                        <h3 class="subsection-title">Sentimento Histórico por Coorte</h3>
+                        <h3 class="subsection-title">Historical Sentiment by Cohort</h3>
                         <div id="cohort-chart-container" class="chart-container">
                             <canvas id="cohort-timeline-chart"></canvas>
                         </div>
@@ -461,12 +465,12 @@
                 <section id="section-community-intel" class="section">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">💬 Inteligência Social</h1>
-                            <p class="section-subtitle">Análise de sentimento Reddit • Rastreio de tópicos</p>
+                            <h1 class="section-title">💬 Social Intelligence</h1>
+                            <p class="section-subtitle">Reddit sentiment analysis • Trending topic tracker</p>
                         </div>
                         <div class="section-controls">
                             <select id="community-subreddit" class="control-select">
-                                <option value="all">Todos os Subs</option>
+                                <option value="all">All Subs</option>
                                 <option value="wallstreetbets">r/wallstreetbets</option>
                                 <option value="stocks">r/stocks</option>
                                 <option value="CryptoCurrency">r/CryptoCurrency</option>
@@ -477,34 +481,34 @@
                     </div>
                     <div class="community-stats-row">
                         <div class="stat-card glow-green">
-                            <span class="stat-label">Sentimento Geral</span>
+                            <span class="stat-label">Overall Sentiment</span>
                             <span class="stat-value" id="stat-sentiment">—</span>
                         </div>
                         <div class="stat-card glow-indigo">
-                            <span class="stat-label">Posts Analisados</span>
+                            <span class="stat-label">Posts Analyzed</span>
                             <span class="stat-value" id="stat-posts-count">—</span>
                         </div>
                         <div class="stat-card glow-amber">
-                            <span class="stat-label">Tópico em Alta</span>
+                            <span class="stat-label">Trending Topic</span>
                             <span class="stat-value" id="stat-trending">—</span>
                         </div>
                         <div class="stat-card glow-red">
-                            <span class="stat-label">Índice de Medo</span>
+                            <span class="stat-label">Fear Index</span>
                             <span class="stat-value" id="stat-fear">—</span>
                         </div>
                     </div>
                     <div class="community-grid">
                         <div class="community-panel">
-                            <h3 class="subsection-title">Mapa de Sentimento por Ativo</h3>
+                            <h3 class="subsection-title">Sentiment Heatmap by Asset</h3>
                             <div id="sentiment-heatmap" class="sentiment-heatmap"></div>
                         </div>
                         <div class="community-panel">
-                            <h3 class="subsection-title">Tópicos em Alta</h3>
+                            <h3 class="subsection-title">Trending Topics</h3>
                             <div id="word-cloud" class="word-cloud"></div>
                         </div>
                     </div>
                     <div class="community-posts-section">
-                        <h3 class="subsection-title">Últimos Posts</h3>
+                        <h3 class="subsection-title">Latest Posts</h3>
                         <div id="community-posts" class="community-posts"></div>
                     </div>
                 </section>
@@ -513,8 +517,8 @@
                 <section id="section-data-sources" class="section">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">🌐 Fontes de Dados & POV</h1>
-                            <p class="section-subtitle">Fontes externas de inteligência de smart money integradas</p>
+                            <h1 class="section-title">🌐 Data Sources & POV</h1>
+                            <p class="section-subtitle">Integrated smart money intelligence sources</p>
                         </div>
                     </div>
                     <div class="sources-grid" id="sources-grid"></div>
@@ -524,29 +528,29 @@
                 <section id="section-settings" class="section">
                     <div class="section-header">
                         <div>
-                            <h1 class="section-title">⚙️ Configurações</h1>
-                            <p class="section-subtitle">Configurar API keys, alertas e preferências</p>
+                            <h1 class="section-title">⚙️ Settings</h1>
+                            <p class="section-subtitle">Configure API keys, alerts and preferences</p>
                         </div>
                     </div>
                     <div class="settings-grid">
                         <div class="settings-card">
-                            <h3 class="settings-card-title">🔑 Configuração de APIs</h3>
+                            <h3 class="settings-card-title">🔑 API Configuration</h3>
                             <div class="setting-row">
                                 <label class="setting-label" for="api-coingecko">CoinGecko API Key</label>
-                                <input type="password" id="api-coingecko" class="setting-input" placeholder="Chave da API CoinGecko Demo">
-                                <span class="setting-hint">Grátis: 30 chamadas/min</span>
+                                <input type="password" id="api-coingecko" class="setting-input" placeholder="CoinGecko Demo API Key">
+                                <span class="setting-hint">Free: 30 calls/min</span>
                             </div>
                             <div class="setting-row">
                                 <label class="setting-label" for="api-etherscan">Etherscan API Key</label>
-                                <input type="password" id="api-etherscan" class="setting-input" placeholder="Chave da API Etherscan">
-                                <span class="setting-hint">Grátis: 3 chamadas/seg</span>
+                                <input type="password" id="api-etherscan" class="setting-input" placeholder="Etherscan API Key">
+                                <span class="setting-hint">Free: 3 calls/sec</span>
                             </div>
-                            <button id="save-api-keys" class="btn-primary">Salvar Chaves</button>
+                            <button id="save-api-keys" class="btn-primary">Save Keys</button>
                         </div>
                         <div class="settings-card">
-                            <h3 class="settings-card-title">🔔 Preferências de Alerta</h3>
+                            <h3 class="settings-card-title">🔔 Alert Preferences</h3>
                             <div class="setting-row">
-                                <label class="setting-label" for="alert-threshold">Limite Mín. de Transação</label>
+                                <label class="setting-label" for="alert-threshold">Min Transaction Threshold</label>
                                 <select id="alert-threshold" class="setting-input">
                                     <option value="100000">$100K</option>
                                     <option value="500000" selected>$500K</option>
@@ -555,32 +559,32 @@
                                 </select>
                             </div>
                             <div class="setting-row toggle-row">
-                                <label class="setting-label">Notificações do Navegador</label>
+                                <label class="setting-label">Browser Notifications</label>
                                 <label class="toggle-switch"><input type="checkbox" id="setting-notifications" checked><span class="toggle-slider"></span></label>
                             </div>
                             <div class="setting-row toggle-row">
-                                <label class="setting-label">Atualização Automática</label>
+                                <label class="setting-label">Auto Refresh</label>
                                 <label class="toggle-switch"><input type="checkbox" id="setting-autorefresh" checked><span class="toggle-slider"></span></label>
                             </div>
                         </div>
                         <div class="settings-card">
-                            <h3 class="settings-card-title">📊 Gestão de Dados</h3>
+                            <h3 class="settings-card-title">📊 Data Management</h3>
                             <div class="setting-row">
-                                <label class="setting-label">Tamanho do Cache</label>
+                                <label class="setting-label">Cache Size</label>
                                 <span class="setting-value" id="cache-size">0 KB</span>
                             </div>
                             <div class="settings-actions">
-                                <button id="clear-cache" class="btn-secondary">Limpar Cache</button>
-                                <button id="export-data" class="btn-secondary">Exportar Dados</button>
+                                <button id="clear-cache" class="btn-secondary">Clear Cache</button>
+                                <button id="export-data" class="btn-secondary">Export Data</button>
                             </div>
                         </div>
                         <div class="settings-card">
-                            <h3 class="settings-card-title">ℹ️ Sobre o WhaleVault</h3>
+                            <h3 class="settings-card-title">ℹ️ About WhaleVault</h3>
                             <div class="about-info">
-                                <p><strong>Versão:</strong> 3.0.0 — WhaleVault Live</p>
-                                <p><strong>Foco:</strong> Ouro, Petróleo, Prata, Índices, Ações & Crypto com dados ao vivo</p>
+                                <p><strong>Version:</strong> 5.0.0 — WhaleVault Intelligence</p>
+                                <p><strong>Focus:</strong> Gold, Oil, Silver, Indices, Equities & Crypto with live data</p>
                                 <p><strong>Stack:</strong> Vanilla JS + LightweightCharts + Chart.js + CoinGecko API</p>
-                                <p class="about-desc">WhaleVault é um dashboard de inteligência smart money que monitora movimentos institucionais com dados ao vivo de crypto via CoinGecko. Commodities, índices e ações usam dados simulados enriquecidos.</p>
+                                <p class="about-desc">WhaleVault is a smart money intelligence dashboard that monitors institutional movements with live crypto data via CoinGecko. Commodities, indices and equities use enriched simulated data.</p>
                             </div>
                         </div>
                     </div>
