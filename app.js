@@ -209,13 +209,38 @@ const TOKENS = [
 ];
 
 // ===================== ENTITY & LABEL DATA =====================
-const WHALE_NAMES = [
-    'Bridgewater Associates', 'BlackRock', 'Vanguard', 'Citadel', 'Renaissance Technologies',
-    'Goldman Sachs Trading', 'JP Morgan Asset Mgmt', 'Norway Sovereign Fund', 'Abu Dhabi Investment Authority',
-    'Berkshire Hathaway', 'PIMCO', 'Two Sigma', 'D.E. Shaw', 'Millennium Management',
-    'Point72', 'Anonymous Whale', 'Institutional Fund', 'Crypto Whale #1', 'Hedge Fund Alpha',
-    'Tiger Global', 'Soros Fund Management', 'Paulson & Co', 'AQR Capital', 'Balyasny Asset Mgmt',
-];
+const ENTITY_PROFILES = {
+    'BlackRock': { ceo: 'Larry Fink', aum: 10500000000000, strategy: 'Multi-Asset', cik: '1364742', type: 'institutional', icon: '🏛️', reputation: 95, founded: 1988, hq: 'New York, NY', sector: 'Asset Management', track: { win: 72, avg90d: 8.4, trades: 2340 } },
+    'Bridgewater Associates': { ceo: 'Ray Dalio', aum: 124000000000, strategy: 'Global Macro', cik: '1350694', type: 'institutional', icon: '🏛️', reputation: 92, founded: 1975, hq: 'Westport, CT', sector: 'Hedge Fund', track: { win: 68, avg90d: 12.1, trades: 890 } },
+    'Vanguard': { ceo: 'Tim Buckley', aum: 8600000000000, strategy: 'Index/Passive', cik: '102909', type: 'institutional', icon: '🏛️', reputation: 88, founded: 1975, hq: 'Malvern, PA', sector: 'Asset Management', track: { win: 64, avg90d: 4.2, trades: 1200 } },
+    'Citadel': { ceo: 'Ken Griffin', aum: 62000000000, strategy: 'Quant/Market Making', cik: '1423053', type: 'institutional', icon: '🏛️', reputation: 94, founded: 1990, hq: 'Miami, FL', sector: 'Hedge Fund', track: { win: 78, avg90d: 15.3, trades: 12450 } },
+    'Renaissance Technologies': { ceo: 'Peter Brown', aum: 106000000000, strategy: 'Quantitative', cik: '1037389', type: 'institutional', icon: '🏛️', reputation: 98, founded: 1982, hq: 'East Setauket, NY', sector: 'Hedge Fund', track: { win: 82, avg90d: 18.7, trades: 8900 } },
+    'Goldman Sachs Trading': { ceo: 'David Solomon', aum: 2800000000000, strategy: 'Multi-Strategy', cik: '886982', type: 'institutional', icon: '🏦', reputation: 90, founded: 1869, hq: 'New York, NY', sector: 'Investment Bank', track: { win: 70, avg90d: 9.2, trades: 15800 } },
+    'JP Morgan Asset Mgmt': { ceo: 'Jamie Dimon (CEO)', aum: 3000000000000, strategy: 'Multi-Asset', cik: '19617', type: 'institutional', icon: '🏦', reputation: 91, founded: 2000, hq: 'New York, NY', sector: 'Investment Bank', track: { win: 71, avg90d: 7.8, trades: 9200 } },
+    'Norway Sovereign Fund': { ceo: 'Nicolai Tangen', aum: 1700000000000, strategy: 'Sovereign Wealth', cik: '1552797', type: 'institutional', icon: '🇳🇴', reputation: 93, founded: 1990, hq: 'Oslo, Norway', sector: 'Sovereign Fund', track: { win: 65, avg90d: 5.1, trades: 420 } },
+    'Abu Dhabi Investment Authority': { ceo: 'Hamed bin Zayed', aum: 993000000000, strategy: 'Sovereign Diversified', cik: null, type: 'institutional', icon: '🇦🇪', reputation: 89, founded: 1976, hq: 'Abu Dhabi, UAE', sector: 'Sovereign Fund', track: { win: 66, avg90d: 6.3, trades: 310 } },
+    'Berkshire Hathaway': { ceo: 'Warren Buffett', aum: 370000000000, strategy: 'Value Investing', cik: '1067983', type: 'institutional', icon: '🏛️', reputation: 97, founded: 1965, hq: 'Omaha, NE', sector: 'Conglomerate', track: { win: 71, avg90d: 5.8, trades: 156 } },
+    'PIMCO': { ceo: 'Emmanuel Roman', aum: 1740000000000, strategy: 'Fixed Income/Macro', cik: '811830', type: 'institutional', icon: '🏛️', reputation: 87, founded: 1971, hq: 'Newport Beach, CA', sector: 'Asset Management', track: { win: 63, avg90d: 3.9, trades: 760 } },
+    'Two Sigma': { ceo: 'John Overdeck', aum: 60000000000, strategy: 'Systematic/AI', cik: '1479506', type: 'institutional', icon: '🏛️', reputation: 91, founded: 2001, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 71, avg90d: 9.8, trades: 5600 } },
+    'D.E. Shaw': { ceo: 'David Shaw', aum: 55000000000, strategy: 'Multi-Strategy', cik: '1009207', type: 'institutional', icon: '🏛️', reputation: 90, founded: 1988, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 74, avg90d: 11.2, trades: 4200 } },
+    'Millennium Management': { ceo: 'Israel Englander', aum: 59000000000, strategy: 'Multi-Manager', cik: '1273087', type: 'institutional', icon: '🏛️', reputation: 88, founded: 1989, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 69, avg90d: 7.6, trades: 6700 } },
+    'Point72': { ceo: 'Steve Cohen', aum: 27000000000, strategy: 'Discretionary/Quant', cik: '1603466', type: 'institutional', icon: '🏛️', reputation: 86, founded: 2014, hq: 'Stamford, CT', sector: 'Hedge Fund', track: { win: 66, avg90d: 6.4, trades: 3100 } },
+    'Tiger Global': { ceo: 'Chase Coleman', aum: 20000000000, strategy: 'Growth/Tech', cik: '1167483', type: 'institutional', icon: '🏛️', reputation: 82, founded: 2001, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 59, avg90d: -3.2, trades: 1890 } },
+    'Soros Fund Management': { ceo: 'George Soros', aum: 28000000000, strategy: 'Global Macro', cik: '1029160', type: 'institutional', icon: '🏛️', reputation: 96, founded: 1970, hq: 'New York, NY', sector: 'Family Office', track: { win: 73, avg90d: 14.5, trades: 540 } },
+    'Paulson & Co': { ceo: 'John Paulson', aum: 3000000000, strategy: 'Event-Driven/Gold', cik: '1035674', type: 'institutional', icon: '🏛️', reputation: 79, founded: 1994, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 55, avg90d: 2.1, trades: 180 } },
+    'AQR Capital': { ceo: 'Cliff Asness', aum: 98000000000, strategy: 'Systematic/Factor', cik: '1167557', type: 'institutional', icon: '🏛️', reputation: 85, founded: 1998, hq: 'Greenwich, CT', sector: 'Hedge Fund', track: { win: 67, avg90d: 8.0, trades: 2400 } },
+    'Balyasny Asset Mgmt': { ceo: 'Dmitry Balyasny', aum: 21000000000, strategy: 'Multi-Strategy', cik: '1336528', type: 'institutional', icon: '🏛️', reputation: 83, founded: 2001, hq: 'Chicago, IL', sector: 'Hedge Fund', track: { win: 70, avg90d: 10.5, trades: 3800 } },
+    'Pershing Square Capital': { ceo: 'Bill Ackman', aum: 18000000000, strategy: 'Activist/Concentrated', cik: '1336528', type: 'institutional', icon: '🏛️', reputation: 84, founded: 2004, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 62, avg90d: 7.3, trades: 95 } },
+    // Crypto whales
+    'Binance Cold Wallet': { ceo: 'CZ (Changpeng Zhao)', aum: 82000000000, strategy: 'Exchange Reserve', cik: null, type: 'crypto', icon: '🟡', reputation: 78, founded: 2017, hq: 'Global', sector: 'Exchange', track: { win: 0, avg90d: 0, trades: 45600 } },
+    'Jump Trading Crypto': { ceo: 'Kanav Kariya', aum: 8000000000, strategy: 'HFT/Market Making', cik: null, type: 'crypto', icon: '🐋', reputation: 85, founded: 1999, hq: 'Chicago, IL', sector: 'Prop Trading', track: { win: 76, avg90d: 22.4, trades: 98000 } },
+    'Wintermute': { ceo: 'Evgeny Gaevoy', aum: 4500000000, strategy: 'Liquidity Provider', cik: null, type: 'crypto', icon: '🐋', reputation: 80, founded: 2017, hq: 'London, UK', sector: 'Market Maker', track: { win: 73, avg90d: 19.1, trades: 120000 } },
+    'Vitalik Buterin': { ceo: 'Vitalik Buterin', aum: 2100000000, strategy: 'DeFi/Governance', cik: null, type: 'crypto', icon: '⟠', reputation: 95, founded: 2013, hq: 'Global', sector: 'Founder', track: { win: 68, avg90d: 34.5, trades: 2800 } },
+    'Galaxy Digital': { ceo: 'Mike Novogratz', aum: 5400000000, strategy: 'Crypto VC/Trading', cik: null, type: 'crypto', icon: '🌌', reputation: 76, founded: 2018, hq: 'New York, NY', sector: 'Crypto Fund', track: { win: 64, avg90d: 15.8, trades: 4200 } },
+    'Crypto Whale #1': { ceo: 'Unknown', aum: 920000000, strategy: 'Accumulation', cik: null, type: 'crypto', icon: '🐋', reputation: 60, founded: null, hq: 'Unknown', sector: 'Whale', track: { win: 61, avg90d: 8.9, trades: 320 } },
+};
+
+const WHALE_NAMES = Object.keys(ENTITY_PROFILES);
 
 const TX_TYPES = ['buy', 'sell', 'position', 'hedge'];
 
@@ -353,6 +378,141 @@ function generateSparkline(points = 24, base = 100, volatility = 5) {
     return data;
 }
 
+// ===================== SMART MONEY SCORE CALCULATOR =====================
+function calcSmartMoneyScore(entity, amount, type, market) {
+    const profile = ENTITY_PROFILES[entity];
+    if (!profile) return { score: randInt(30, 65), components: {} };
+    let score = 0;
+    const components = {};
+
+    // Reputation weight (0-25)
+    components.reputation = Math.round(profile.reputation * 0.25);
+    score += components.reputation;
+
+    // Track record weight (0-25)
+    components.trackRecord = Math.round((profile.track.win / 100) * 25);
+    score += components.trackRecord;
+
+    // Position size relative to AUM (0-20) — larger relative = more conviction
+    const pctOfAum = (amount / profile.aum) * 100;
+    components.conviction = Math.min(20, Math.round(pctOfAum * 200));
+    score += components.conviction;
+
+    // Market timing / type signal (0-15)
+    if (type === 'buy' && profile.track.avg90d > 0) components.timing = 15;
+    else if (type === 'hedge') components.timing = 12;
+    else if (type === 'position') components.timing = 10;
+    else components.timing = 7;
+    score += components.timing;
+
+    // Diversification bonus (0-15)
+    components.diversification = market === 'crypto' ? 8 : market === 'equities' ? 12 : market === 'commodities' ? 14 : 10;
+    score += components.diversification;
+
+    return { score: Math.min(99, score), components };
+}
+
+// ===================== FILING INFO GENERATOR =====================
+function generateFilingInfo(market, entity) {
+    const profile = ENTITY_PROFILES[entity];
+    const now = new Date();
+    const filingDate = new Date(now - randInt(1, 45) * 86400000);
+    const dateStr = filingDate.toISOString().split('T')[0];
+    
+    if (market === 'crypto') {
+        return {
+            type: randEl(['On-Chain TX', 'Wallet Transfer', 'DEX Swap', 'Bridge TX', 'Staking Move']),
+            date: dateStr,
+            cik: null,
+            shares: null,
+            blockNumber: randInt(19000000, 20500000),
+            confirmations: randInt(12, 500),
+            gasUsed: randInt(21000, 350000),
+        };
+    }
+
+    const filingTypes = {
+        equities: ['13F-HR', '13F-HR/A', 'SC 13G', 'SC 13D', 'Form 4'],
+        commodities: ['CFTC COT', 'COT Supplemental', 'Disaggregated COT'],
+        indices: ['13F-HR', 'CFTC COT', 'ADV-H'],
+    };
+    const type = randEl(filingTypes[market] || filingTypes.equities);
+    
+    return {
+        type,
+        date: dateStr,
+        cik: profile?.cik || String(randInt(1000000, 2000000)),
+        shares: randInt(50000, 12000000),
+        prevShares: randInt(30000, 10000000),
+        changePercent: rand(-40, 80).toFixed(1),
+    };
+}
+
+// ===================== INSIGHT GENERATOR =====================
+function generateInsight(type, market, tokenName, amount, entity) {
+    const profile = ENTITY_PROFILES[entity];
+    const ceoFirst = profile?.ceo?.split(' ')[0] || 'Management';
+
+    const insights = {
+        buy: {
+            commodities: [
+                `${entity} adds to ${tokenName} position — new accumulation phase. ${ceoFirst}'s macro thesis favors hard assets as inflation hedge amid rising geopolitical risk.`,
+                `13F filing reveals ${entity} increased ${tokenName} exposure by ${rand(15,60).toFixed(0)}%. Signals strong conviction in commodity supercycle thesis.`,
+                `${entity} initiating new long ${tokenName} position. Portfolio rebalance suggests rotation from duration risk into real assets.`,
+                `Major accumulation by ${entity} in ${tokenName}. Fund positioning aligns with recent central bank purchasing patterns and de-dollarization trend.`,
+            ],
+            indices: [
+                `${entity} increasing exposure to ${tokenName}. ${ceoFirst} sees value after recent pullback — risk/reward now favorable per internal models.`,
+                `Systematic buying by ${entity} in ${tokenName}. Factor models triggering momentum and mean-reversion signals simultaneously.`,
+                `${entity} adds ${tokenName} exposure ahead of earnings season. Macro overlay suggests broadening market participation.`,
+            ],
+            equities: [
+                `${entity} initiates new position in ${tokenName} — ${formatUSD(amount)} stake. ${ceoFirst} sees undervaluation relative to peer group.`,
+                `13F reveals ${entity} accumulated ${tokenName} shares. Position sizing suggests high-conviction bet on sector rotation.`,
+                `${entity} increases ${tokenName} stake by ${rand(10,45).toFixed(0)}%. Dark pool activity confirms sustained institutional accumulation over 5 sessions.`,
+            ],
+            crypto: [
+                `${entity} moves ${formatUSD(amount)} in ${tokenName} to cold storage — long-term accumulation signal. On-chain metrics show declining exchange reserves.`,
+                `Large ${tokenName} purchase by ${entity}. Wallet analysis shows DCA pattern over past 14 days — total exposure now exceeds ${formatUSD(amount * rand(3,8))}.`,
+                `${entity} onboards ${formatUSD(amount)} ${tokenName}. Coincides with whale accumulation zone identified by on-chain intelligence.`,
+            ],
+        },
+        sell: {
+            commodities: [
+                `${entity} reduces ${tokenName} exposure — partial profit-taking after ${rand(8,25).toFixed(0)}% rally. Position decreased but still maintains core long.`,
+                `${entity} trimming ${tokenName} allocation. ${ceoFirst} rotating proceeds into shorter-duration instruments ahead of Fed decision.`,
+            ],
+            indices: [
+                `${entity} reduces ${tokenName} allocation by ${rand(10,35).toFixed(0)}%. Portfolio de-risking as volatility indices signal elevated uncertainty.`,
+                `Systematic selling by ${entity} in ${tokenName}. Risk models flagging overextension — partial reduction, not a full exit.`,
+            ],
+            equities: [
+                `${entity} exiting ${tokenName} position — ${formatUSD(amount)} divestment. Filing suggests sector rotation from growth to value/defensives.`,
+                `${entity} reduces ${tokenName} stake. Post-earnings repositioning — ${ceoFirst}'s team sees limited upside at current multiples.`,
+            ],
+            crypto: [
+                `${entity} transfers ${formatUSD(amount)} ${tokenName} to exchange — potential distribution. On-chain flow suggests partial profit realization.`,
+                `Large ${tokenName} outflow from ${entity} wallet. Exchange deposits spiking — bearish short-term signal for price action.`,
+            ],
+        },
+        position: {
+            commodities: [`${entity} restructures ${tokenName} portfolio — adjusting futures curve exposure. ${ceoFirst} repositioning for contango/backwardation shifts.`],
+            indices: [`${entity} rebalancing ${tokenName} portfolio weighting. Systematic allocation triggers after sector correlation breakdown.`],
+            equities: [`${entity} adjusts ${tokenName} position size — internal risk committee signaling portfolio concentration limits reached.`],
+            crypto: [`${entity} rebalances ${tokenName} across multiple wallets. On-chain patterns suggest portfolio optimization, not directional trade.`],
+        },
+        hedge: {
+            commodities: [`${entity} implements ${tokenName} hedge via options overlay — ${ceoFirst}'s team protecting downside while maintaining upside exposure.`],
+            indices: [`${entity} hedging ${tokenName} exposure with put spreads. VIX positioning suggests expecting 2-4 weeks of elevated volatility.`],
+            equities: [`${entity} hedging ${tokenName} concentration risk with collar strategy — protective put + covered call structure.`],
+            crypto: [`${entity} hedging ${tokenName} position through perpetual shorts — funding rate arbitrage generating additional yield.`],
+        },
+    };
+
+    const pool = insights[type]?.[market] || [`${entity} ${type}s ${formatUSD(amount)} in ${tokenName}. Institutional flow detected.`];
+    return randEl(pool);
+}
+
 // ===================== ALERT GENERATOR =====================
 function generateWhaleAlert() {
     const token = randEl(TOKENS);
@@ -360,16 +520,47 @@ function generateWhaleAlert() {
     const type = randEl(TX_TYPES);
     const impact = amount > 20000000 ? 'high' : amount > 5000000 ? 'medium' : 'low';
     const isInstitutional = token.market !== 'crypto';
+    const whaleName = randEl(WHALE_NAMES);
+    const profile = ENTITY_PROFILES[whaleName];
     const source = getSourceInfo(token.market, token.symbol);
-    return {
-        id: Date.now() + randInt(0, 9999), token: token.symbol, tokenName: token.name,
-        market: token.market, amount, type, impact,
-        from: isInstitutional ? randEl(WHALE_NAMES) : randAddr(),
-        to: isInstitutional ? (type === 'buy' ? 'Accumulation' : type === 'sell' ? 'Reduction' : 'Rebalancing') : randAddr(),
-        time: Date.now() - randInt(0, 3600000),
-        whaleName: randEl(WHALE_NAMES),
-        sourceUrl: source.url, sourceName: source.name, sourceIcon: source.icon,
+    const filing = generateFilingInfo(token.market, whaleName);
+    const sms = calcSmartMoneyScore(whaleName, amount, type, token.market);
+    const insight = generateInsight(type, token.market, token.name, amount, whaleName);
+
+    const actionLabel = {
+        buy: 'Accumulation — new position or increase',
+        sell: 'Reduction — partial or full exit',
+        position: 'Rebalancing — portfolio adjustment',
+        hedge: 'Hedge — risk protection against exposure',
     };
+
+    return {
+        id: Date.now() + randInt(0, 9999),
+        token: token.symbol, tokenName: token.name,
+        market: token.market, amount, type, impact,
+        from: isInstitutional ? whaleName : randAddr(),
+        to: isInstitutional ? actionLabel[type] : randAddr(),
+        time: Date.now() - randInt(0, 3600000),
+        whaleName,
+        profile,
+        filing,
+        smartMoneyScore: sms.score,
+        smsComponents: sms.components,
+        insight,
+        actionLabel: actionLabel[type],
+        sourceUrl: source.url, sourceName: source.name, sourceIcon: source.icon,
+        convergenceSignals: generateConvergenceSignals(token, type),
+    };
+}
+
+function generateConvergenceSignals(token, type) {
+    const signals = [];
+    if (Math.random() > 0.4) signals.push({ icon: '📊', label: 'COT Report', detail: type === 'buy' ? 'Commercials net long increasing' : 'Large specs reducing longs', sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    if (Math.random() > 0.5) signals.push({ icon: '📈', label: 'Options Flow', detail: `Unusual ${type === 'buy' ? 'call' : 'put'} activity detected`, sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    if (Math.random() > 0.6) signals.push({ icon: '🔗', label: 'On-Chain', detail: type === 'buy' ? 'Exchange outflows accelerating' : 'Exchange inflows rising', sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    if (Math.random() > 0.55) signals.push({ icon: '💬', label: 'Social Sentiment', detail: `Reddit/Twitter sentiment trending ${type === 'buy' ? 'positive' : 'negative'}`, sentiment: type === 'buy' ? 'bullish' : 'neutral' });
+    if (Math.random() > 0.65) signals.push({ icon: '🏦', label: 'Dark Pool', detail: `${type === 'buy' ? 'Accumulation' : 'Distribution'} patterns on dark pools`, sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    return signals;
 }
 
 // ===================== REDDIT POST GENERATOR =====================
@@ -549,30 +740,143 @@ function setTicker(id, token) {
 }
 
 // ===================== WHALE ALERTS =====================
+function getScoreColor(score) {
+    if (score >= 80) return 'var(--accent-bull)';
+    if (score >= 60) return 'var(--accent-info)';
+    if (score >= 40) return 'var(--accent-warn)';
+    return 'var(--accent-bear)';
+}
+
+function getScoreLabel(score) {
+    if (score >= 80) return 'Very High';
+    if (score >= 60) return 'High';
+    if (score >= 40) return 'Moderate';
+    return 'Low';
+}
+
 function renderAlertHTML(a) {
     const mktLabel = { commodities: '🥇 COMMODITY', indices: '📊 INDEX', equities: '📈 EQUITY', crypto: '₿ CRYPTO' }[a.market] || a.market;
     const isInst = a.market !== 'crypto';
+    const profile = a.profile || {};
+    const filing = a.filing || {};
+    const sms = a.smartMoneyScore || randInt(30, 80);
+    const smsColor = getScoreColor(sms);
+    const smsLabel = getScoreLabel(sms);
+
     const sourceLink = a.sourceUrl
         ? `<a href="${a.sourceUrl}" target="_blank" rel="noopener" class="alert-source-link" title="Verify on ${a.sourceName}">${a.sourceIcon || '🔗'} ${a.sourceName}</a>`
         : '';
-    return `<div class="alert-item" data-chain="${a.market}" data-impact="${a.impact}">
-        <div class="alert-impact">${a.impact === 'high' ? '🔴' : a.impact === 'medium' ? '🟡' : '🟢'}</div>
-        <div class="alert-info">
-            <div class="alert-title">
-                <span class="amount">${formatUSD(a.amount)}</span> ${a.token}
-                <span class="alert-chain-tag ${a.market}">${mktLabel}</span>
+    
+    // Filing badge
+    const filingBadge = filing.type ? `<span class="filing-badge">${filing.type}</span>` : '';
+    
+    // CIK link
+    const cikLink = filing.cik
+        ? `<a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${filing.cik}&type=13F&dateb=&owner=include&count=10" target="_blank" rel="noopener" class="cik-link" title="SEC EDGAR Filings">🔗 CIK: ${filing.cik}</a>`
+        : '';
+
+    // Shares/contracts info
+    const sharesInfo = filing.shares
+        ? `${filing.shares.toLocaleString()} shares/contracts`
+        : filing.blockNumber
+        ? `Block #${filing.blockNumber.toLocaleString()} • ${filing.confirmations} confirmations`
+        : '';
+
+    // Filing line
+    const filingLine = filing.type
+        ? `<div class="alert-filing-line">📋 ${filing.type} • Filing: ${filing.date} ${cikLink} ${sharesInfo}</div>`
+        : '';
+
+    // Convergence signals
+    const signalsHTML = (a.convergenceSignals || []).map(s => {
+        const sentClass = s.sentiment === 'bullish' ? 'signal-bullish' : s.sentiment === 'bearish' ? 'signal-bearish' : 'signal-neutral';
+        return `<span class="convergence-chip ${sentClass}" title="${s.detail}">${s.icon} ${s.label}</span>`;
+    }).join('');
+
+    const actionDesc = a.actionLabel || (isInst ? a.type.toUpperCase() + ' → ' + a.to : shortAddr(a.from) + ' → ' + shortAddr(a.to));
+    const typeIcon = { buy: '🟢', sell: '🔴', position: '🔵', hedge: '🟠' }[a.type] || '⚪';
+
+    return `<div class="alert-item" data-chain="${a.market}" data-impact="${a.impact}" data-id="${a.id}" onclick="toggleAlertExpand(this)">
+        <div class="alert-main-row">
+            <div class="alert-impact">${a.impact === 'high' ? '🔴' : a.impact === 'medium' ? '🟡' : '🟢'}</div>
+            <div class="alert-info">
+                <div class="alert-title">
+                    <span class="amount">${formatUSD(a.amount)}</span> <span class="alert-token">${a.token}</span>
+                    <span class="alert-chain-tag ${a.market}">${mktLabel}</span>
+                    ${filingBadge}
+                    ${sourceLink}
+                </div>
+                <div class="alert-entity-line">
+                    <span class="entity-icon">${profile.icon || '🐋'}</span>
+                    <span class="entity-name">${a.whaleName}</span>
+                    <span class="entity-aum">AUM: ${formatUSD(profile.aum || 0)}</span>
+                </div>
+                <div class="alert-detail">
+                    <span class="entity-ceo">👤 ${profile.ceo || 'Unknown'}</span>
+                    <span class="alert-action">${a.type.toUpperCase()} → ${isInst ? (a.to || 'Rebalancing') : shortAddr(a.to || '')}</span>
+                </div>
+                ${filingLine}
             </div>
-            <div class="alert-detail">
-                <span>${a.whaleName}</span>
-                <span class="addr">${isInst ? a.type.toUpperCase() + ' → ' + a.to : shortAddr(a.from) + ' → ' + shortAddr(a.to)}</span>
-                ${sourceLink}
+            <div class="alert-right">
+                <div class="alert-time">${timeAgo(Date.now() - a.time)}</div>
+                <span class="alert-type-tag ${a.type}">${a.type}</span>
+                <div class="sms-mini" title="Smart Money Score: ${sms}/100 — ${smsLabel}">
+                    <span class="sms-value" style="color:${smsColor}">⚡ ${sms}</span>
+                    <div class="sms-bar-mini"><div class="sms-bar-fill-mini" style="width:${sms}%;background:${smsColor}"></div></div>
+                </div>
+                <span class="expand-arrow">▼</span>
             </div>
         </div>
-        <div class="alert-meta">
-            <div class="alert-time">${timeAgo(Date.now() - a.time)}</div>
-            <span class="alert-type-tag ${a.type}">${a.type}</span>
+        <div class="alert-expandable">
+            <div class="alert-expand-content">
+                <div class="insight-panel">
+                    <div class="insight-header">💡 Smart Money Insight</div>
+                    <p class="insight-text">${a.insight || ''}</p>
+                </div>
+                <div class="alert-expand-grid">
+                    <div class="expand-section">
+                        <div class="expand-section-title">Entity Profile</div>
+                        <div class="profile-details">
+                            <div class="profile-row"><span class="pf-label">CEO/Manager</span><span class="pf-value">${profile.ceo || 'N/A'}</span></div>
+                            <div class="profile-row"><span class="pf-label">AUM</span><span class="pf-value">${formatUSD(profile.aum || 0)}</span></div>
+                            <div class="profile-row"><span class="pf-label">Strategy</span><span class="pf-value">${profile.strategy || 'N/A'}</span></div>
+                            <div class="profile-row"><span class="pf-label">Headquarters</span><span class="pf-value">${profile.hq || 'N/A'}</span></div>
+                            <div class="profile-row"><span class="pf-label">Sector</span><span class="pf-value">${profile.sector || 'N/A'}</span></div>
+                            <div class="profile-row"><span class="pf-label">Founded</span><span class="pf-value">${profile.founded || 'N/A'}</span></div>
+                        </div>
+                    </div>
+                    <div class="expand-section">
+                        <div class="expand-section-title">Track Record (90d)</div>
+                        <div class="profile-details">
+                            <div class="profile-row"><span class="pf-label">Win Rate</span><span class="pf-value ${(profile.track?.win || 0) >= 60 ? 'positive-text' : 'negative-text'}">${profile.track?.win || 0}%</span></div>
+                            <div class="profile-row"><span class="pf-label">P&L (90d)</span><span class="pf-value ${(profile.track?.avg90d || 0) >= 0 ? 'positive-text' : 'negative-text'}">${(profile.track?.avg90d || 0) >= 0 ? '+' : ''}${profile.track?.avg90d || 0}%</span></div>
+                            <div class="profile-row"><span class="pf-label">Total Trades</span><span class="pf-value">${(profile.track?.trades || 0).toLocaleString()}</span></div>
+                            <div class="profile-row"><span class="pf-label">Reputation</span><span class="pf-value">${profile.reputation || 0}/100</span></div>
+                        </div>
+                    </div>
+                    <div class="expand-section">
+                        <div class="expand-section-title">Smart Money Score Breakdown</div>
+                        <div class="sms-breakdown">
+                            <div class="sms-component"><span>Reputation</span><div class="sms-comp-bar"><div style="width:${(a.smsComponents?.reputation || 0) * 4}%;background:var(--accent-primary)"></div></div><span>${a.smsComponents?.reputation || 0}/25</span></div>
+                            <div class="sms-component"><span>Track Record</span><div class="sms-comp-bar"><div style="width:${(a.smsComponents?.trackRecord || 0) * 4}%;background:var(--accent-bull)"></div></div><span>${a.smsComponents?.trackRecord || 0}/25</span></div>
+                            <div class="sms-component"><span>Conviction</span><div class="sms-comp-bar"><div style="width:${(a.smsComponents?.conviction || 0) * 5}%;background:var(--accent-warn)"></div></div><span>${a.smsComponents?.conviction || 0}/20</span></div>
+                            <div class="sms-component"><span>Timing</span><div class="sms-comp-bar"><div style="width:${((a.smsComponents?.timing || 0) / 15) * 100}%;background:var(--accent-info)"></div></div><span>${a.smsComponents?.timing || 0}/15</span></div>
+                            <div class="sms-component"><span>Diversification</span><div class="sms-comp-bar"><div style="width:${((a.smsComponents?.diversification || 0) / 15) * 100}%;background:var(--accent-cyan)"></div></div><span>${a.smsComponents?.diversification || 0}/15</span></div>
+                        </div>
+                        <div class="sms-total">Total Score: <strong style="color:${smsColor};font-size:1.2rem">${sms}</strong>/100 <span class="sms-label-tag" style="background:${smsColor}22;color:${smsColor}">${smsLabel}</span></div>
+                    </div>
+                </div>
+                ${signalsHTML ? `<div class="convergence-row"><span class="convergence-title">🔄 Convergence Signals:</span>${signalsHTML}</div>` : ''}
+                <div class="alert-action-row">
+                    ${typeIcon} <span class="action-description">${actionDesc}</span>
+                </div>
+            </div>
         </div>
     </div>`;
+}
+
+function toggleAlertExpand(el) {
+    el.classList.toggle('expanded');
 }
 
 function renderWhaleAlerts() {
