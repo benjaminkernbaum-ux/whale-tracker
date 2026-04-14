@@ -151,10 +151,15 @@ const CRYPTO_TX_TYPES = [
     { type: 'mint', context: 'Mint/Criação de tokens', icon: '🪙' },
 ];
 
-// Gerar TX hash realista
-function generateTxHash() {
-    return '0x' + Array.from({length: 64}, () => '0123456789abcdef'[randInt(0,16)]).join('');
-}
+// Map crypto symbols to their correct blockchain explorer
+const CRYPTO_EXPLORERS = {
+    'BTC/USD':  { name: 'Blockchain.com', url: 'https://www.blockchain.com/explorer/mempool/btc', icon: '⛓️', chain: 'bitcoin' },
+    'ETH/USD':  { name: 'Etherscan', url: 'https://etherscan.io', icon: '🔍', chain: 'ethereum' },
+    'XRP/USD':  { name: 'XRPScan', url: 'https://xrpscan.com', icon: '🔍', chain: 'xrpl' },
+    'BNB/USD':  { name: 'BscScan', url: 'https://bscscan.com', icon: '🔍', chain: 'bsc' },
+    'TRX/USD':  { name: 'Tronscan', url: 'https://tronscan.org', icon: '🔍', chain: 'tron' },
+    'SOL/USD':  { name: 'Solscan', url: 'https://solscan.io', icon: '🔍', chain: 'solana' },
+};
 
 // ---- SMART MONEY SCORE ----
 function calculateSmartMoneyScore(alert) {
@@ -199,8 +204,8 @@ function generateWhaleAlert() {
         let toWallet = randEl(KNOWN_CRYPTO_WALLETS);
         while (toWallet.address === fromWallet.address) toWallet = randEl(KNOWN_CRYPTO_WALLETS);
         const txType = randEl(CRYPTO_TX_TYPES);
-        const txHash = generateTxHash();
         const coinAmount = amount / token.price;
+        const explorer = CRYPTO_EXPLORERS[token.symbol] || CRYPTO_EXPLORERS['ETH/USD'];
         alert = {
             id: Date.now() + randInt(0, 9999), token: token.symbol, tokenName: token.name,
             market: token.market, amount, type: txType.type, impact,
@@ -208,10 +213,11 @@ function generateWhaleAlert() {
             to: toWallet.address, toLabel: toWallet.label, toTag: toWallet.tag,
             time: Date.now() - randInt(0, 3600000),
             whaleName: fromWallet.label,
-            coinAmount, txHash, txLink: `https://etherscan.io/tx/${txHash}`,
+            coinAmount,
+            explorerName: explorer.name, explorerUrl: explorer.url, explorerIcon: explorer.icon,
             fromLink: fromWallet.etherscan, toLink: toWallet.etherscan,
             source: 'Whale Alert', sourceUrl: 'https://whale-alert.io', sourceIcon: '🐋',
-            context: txType.context, contextIcon: txType.icon, chain: fromWallet.chain,
+            context: txType.context, contextIcon: txType.icon, chain: explorer.chain,
         };
     } else {
         const entity = randEl(INSTITUTIONAL_ENTITIES);
@@ -578,12 +584,12 @@ function renderAlertCard(a) {
         const fromLink = a.fromLink ? `<a href="${a.fromLink}" target="_blank" rel="noopener" style="color:var(--accent-info);text-decoration:none" title="${a.from}">${fromAddr}</a>` : fromAddr;
         const toLink = a.toLink ? `<a href="${a.toLink}" target="_blank" rel="noopener" style="color:var(--accent-info);text-decoration:none" title="${a.to}">${toAddr}</a>` : toAddr;
         const coinAmt = a.coinAmount ? ` (${a.coinAmount >= 1 ? a.coinAmount.toFixed(2) : a.coinAmount.toFixed(4)} ${a.token.replace('/USD','')})` : '';
-        const txLink = a.txHash ? `<a href="${a.txLink}" target="_blank" rel="noopener" style="color:var(--text-muted);text-decoration:none;font-size:0.68rem" title="Ver transação">🔗 TX: ${a.txHash.slice(0,10)}...</a>` : '';
+        const explorerLink = a.explorerUrl ? `<a href="${a.explorerUrl}" target="_blank" rel="noopener" style="color:var(--accent-info);text-decoration:none;font-size:0.68rem" title="Verificar em ${a.explorerName}">${a.explorerIcon || '🔗'} ${a.explorerName}</a>` : '';
         const chainBadge = a.chain ? `<span style="color:var(--text-muted);font-size:0.65rem;text-transform:uppercase;">⛓ ${a.chain}</span>` : '';
         detailsHtml = `
             <div class="alert-detail"><span style="font-weight:600">${a.fromLabel || 'Carteira Desconhecida'}</span> <span class="alert-wallet-tag ${a.fromTag || ''}">${a.fromTag || ''}</span></div>
             <div class="alert-detail" style="font-size:0.75rem"><span class="addr">${fromLink} → ${toLink}</span> <span style="font-weight:600">${a.toLabel || ''}</span></div>
-            <div class="alert-detail" style="gap:8px;margin-top:2px">${txLink} ${chainBadge}<span style="color:var(--accent-alert);font-size:0.72rem;font-family:var(--font-mono)">${coinAmt}</span></div>`;
+            <div class="alert-detail" style="gap:8px;margin-top:2px">${explorerLink} ${chainBadge}<span style="color:var(--accent-alert);font-size:0.72rem;font-family:var(--font-mono)">${coinAmt}</span></div>`;
     } else {
         const entityInfo = a.entityAUM ? `<span style="color:var(--accent-whale-light);font-size:0.72rem">AUM: ${a.entityAUM}</span>` : '';
         const managerInfo = a.entityManager ? `<span style="color:var(--text-muted);font-size:0.7rem">👤 ${a.entityManager}</span>` : '';
