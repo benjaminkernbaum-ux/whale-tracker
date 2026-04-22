@@ -794,6 +794,35 @@
   .edge{position:absolute;top:10px;right:10px;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:4px;font-family:var(--font-mono)}
   .edge.hot{background:var(--amber-soft);color:var(--amber)}
 
+
+  /* ============ BLOOMBERG CANDLESTICK ============ */
+  .cstk-wrap .vol-area{opacity:.25}
+  .cstk-wrap .candle-g{cursor:crosshair}
+  .cstk-wrap .candle-g:hover .candle-body{opacity:.85;filter:brightness(1.2)}
+  .cstk-wrap .price-line{stroke:rgba(255,255,255,.12);stroke-dasharray:4 4;stroke-width:.5}
+  .cstk-wrap .price-label{fill:var(--text-muted);font-size:8px;font-family:var(--font-mono)}
+  .cstk-wrap .vol-label{fill:var(--text-dim);font-size:7px;font-family:var(--font-mono)}
+  .cstk-wrap .current-line{stroke:var(--amber);stroke-width:.8;stroke-dasharray:3 2}
+  .cstk-wrap .current-tag{fill:var(--amber);rx:3}
+  .cstk-wrap .current-tag-text{fill:#0a0a0c;font-size:8px;font-weight:700;font-family:var(--font-mono)}
+
+  .cross-tip .ohlc-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+  .cross-tip .ohlc-grid .lbl{color:var(--text-dim);font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+  .cross-tip .vol-row{margin-top:4px;padding-top:4px;border-top:1px solid var(--border);color:var(--text-muted)}
+
+  /* ============ ENHANCED SPARKLINE ============ */
+  .spark-enhanced{position:relative;overflow:hidden}
+  .spark-enhanced svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.2))}
+
+  /* ============ PRICE FLASH ============ */
+  @keyframes cellFlashUp{0%{box-shadow:inset 0 0 0 1px rgba(46,204,113,.6),0 0 16px rgba(46,204,113,.2)}100%{box-shadow:none}}
+  @keyframes cellFlashDn{0%{box-shadow:inset 0 0 0 1px rgba(255,77,109,.6),0 0 16px rgba(255,77,109,.2)}100%{box-shadow:none}}
+  .cell-flash-up{animation:cellFlashUp .8s ease-out}
+  .cell-flash-dn{animation:cellFlashDn .8s ease-out}
+
+  /* ============ COUNTUP ============ */
+  .countup-val{display:inline-block;min-width:1ch}
+
   /* /V3 enhancements */
 
   .empty{padding:40px 20px;text-align:center;color:var(--text-muted)}
@@ -1669,7 +1698,7 @@ const shortAd = a => a.length>14 ? a.slice(0,6)+'…'+a.slice(-4) : a;
 const aumFmt = b => b>=1000 ? `$${(b/1000).toFixed(1)}T` : b>=1 ? `$${b}B` : `$${(b*1000).toFixed(0)}M`;
 
 /* seeded random walk series for sparklines/charts */
-function seriesFor(key, len=40, vol=0.025, bias=0){
+function seriesFor(key, len=60, vol=0.025, bias=0){
   let seed=0; for(const c of key) seed=(seed*31+c.charCodeAt(0))&0xffffffff;
   const rnd=()=>{ seed=(seed*9301+49297)%233280; return seed/233280 };
   const arr=[]; let v=100;
@@ -1795,7 +1824,7 @@ function assetRowHtml(a){
   return `<div class="asset-row" data-sym="${a.sym}">
     <div class="asym ${a.cls}">${a.sym.slice(0,3)}</div>
     <div class="info"><div class="nm">${a.name}</div><div class="cl">${a.cls}</div></div>
-    <div class="spark">${sparkline(seriesFor(a.sym,30,0.025,up?0.02:-0.02),{color:up?'#2ecc71':'#ff4d6d',w:60,h:26})}</div>
+    <div class="spark">${sparkline(seriesFor(a.sym,60,0.025,up?0.02:-0.02),{color:up?'#2ecc71':'#ff4d6d',w:60,h:26})}</div>
     <div class="price"><div class="p">${fmtPx(a.price)}</div><div class="c ${up?'up':'dn'}">${sign(a.ch24)}</div></div>
     <button class="star ${star?'on':''}" data-sym="${a.sym}" aria-label="Watchlist">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="${star?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1832,7 +1861,7 @@ function renderMarkets(){
         <div class="h"><span>${a.name}</span><span class="mono">${a.sym}</span></div>
         <div class="v">${fmtPx(a.price)}</div>
         <div class="c">${up?'▲':'▼'} ${sign(a.ch24)} · 7d ${sign(a.ch7)}</div>
-        <div class="spark">${sparkline(seriesFor(a.sym,30,0.025,up?0.02:-0.02),{color:up?'#2ecc71':'#ff4d6d',w:120,h:28})}</div>
+        <div class="spark">${sparkline(seriesFor(a.sym,60,0.025,up?0.02:-0.02),{color:up?'#2ecc71':'#ff4d6d',w:120,h:28})}</div>
       </div>`;
     }).join('')}</div>`;
   } else {
@@ -2526,7 +2555,46 @@ function buildFlowTape(){
 }
 
 /* ============ V3 · CANDLESTICK CHART ============ */
-function candleSeriesFor(key, count=48){
+function candlestickChart(data, {w=420, h=160}={}){
+  const volH=h*0.18, chartH=h-volH-4;
+  const pad={l:6,r:36,t:4,b:2};
+  const cw=w-pad.l-pad.r, ch=chartH-pad.t-pad.b;
+  const mn=Math.min(...data.map(d=>d.l)),mx=Math.max(...data.map(d=>d.h));
+  const rng=(mx-mn)||1, maxV=Math.max(...data.map(d=>d.v||1));
+  const bw=Math.max(3,cw/(data.length*1.5)), gap=bw*0.5;
+  const yy=v=>pad.t+ch-((v-mn)/rng)*ch;
+
+  const fm="var(--font-mono)";
+  // Grid lines
+  const grid=[0.25,0.5,0.75].map(p=>{
+    const pr=mn+rng*p,yp=yy(pr);
+    return `<line x1="${pad.l}" x2="${w-pad.r}" y1="${yp.toFixed(1)}" y2="${yp.toFixed(1)}" stroke="rgba(255,255,255,.06)" stroke-dasharray="3 3"/><text x="${w-pad.r+3}" y="${(yp+3).toFixed(1)}" fill="rgba(255,255,255,.3)" font-size="7" font-family="${fm}">${pr.toFixed(pr>1000?0:2)}</text>`;
+  }).join("");
+
+  // Current price marker
+  const last=data[data.length-1],cy=yy(last.c);
+  const cur=`<line x1="${pad.l}" x2="${w-pad.r}" y1="${cy.toFixed(1)}" y2="${cy.toFixed(1)}" stroke="rgba(255,159,28,.5)" stroke-width=".8" stroke-dasharray="3 2"/><rect x="${w-pad.r+1}" y="${(cy-6).toFixed(1)}" width="32" height="12" rx="3" fill="rgba(255,159,28,.9)"/><text x="${w-pad.r+3}" y="${(cy+2).toFixed(1)}" fill="#0a0a0c" font-size="7" font-weight="700" font-family="${fm}">${last.c.toFixed(last.c>1000?0:2)}</text>`;
+
+  // Candles with wicks
+  const candles=data.map((d,i)=>{
+    const x=pad.l+i*(bw+gap), up=d.c>=d.o;
+    const col=up?"#2ecc71":"#ff4d6d";
+    const bt=yy(Math.max(d.o,d.c)),bb=yy(Math.min(d.o,d.c));
+    const bh=Math.max(1,bb-bt);
+    return `<g class="candle-g"><line x1="${(x+bw/2).toFixed(1)}" x2="${(x+bw/2).toFixed(1)}" y1="${yy(d.h).toFixed(1)}" y2="${yy(d.l).toFixed(1)}" stroke="${col}" stroke-width="1"/><rect x="${x.toFixed(1)}" y="${bt.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" rx="1"/></g>`;
+  }).join("");
+
+  // Volume bars
+  const vols=data.map((d,i)=>{
+    const x=pad.l+i*(bw+gap), up=d.c>=d.o;
+    const vh=((d.v||0)/maxV)*volH;
+    return `<rect x="${x.toFixed(1)}" y="${(h-vh).toFixed(1)}" width="${bw.toFixed(1)}" height="${vh.toFixed(1)}" fill="${up?"#2ecc71":"#ff4d6d"}" opacity=".2" rx="1"/>`;
+  }).join("");
+
+  const sep=`<line x1="${pad.l}" x2="${w-pad.r}" y1="${(h-volH).toFixed(1)}" y2="${(h-volH).toFixed(1)}" stroke="rgba(255,255,255,.05)"/><text x="${pad.l+1}" y="${(h-volH+8).toFixed(1)}" fill="rgba(255,255,255,.2)" font-size="6" font-family="${fm}">VOL</text>`;
+
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%;display:block">${grid}${cur}${sep}${vols}${candles}</svg>`;
+}dleSeriesFor(key, count=48){
   let seed=0; for(const c of key) seed=(seed*31+c.charCodeAt(0))&0xffffffff;
   const rnd=()=>{ seed=(seed*9301+49297)%233280; return seed/233280 };
   const arr=[]; let price=100;
@@ -3209,6 +3277,50 @@ if(_origRM){
     setTimeout(applyExtremeGlow, 50);
   };
 }
+
+
+
+/* ============ COUNTUP ANIMATION ============ */
+function animateValue(el, start, end, duration) {
+  if (!el || start === end) return;
+  const startTime = performance.now();
+  const isPrice = el.textContent.includes('
+</html>
+) || el.textContent.includes(',');
+  
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = start + (end - start) * eased;
+    
+    if (isPrice) {
+      el.textContent = '
+</html>
+ + current.toLocaleString('en-US', {maximumFractionDigits: 2});
+    } else {
+      el.textContent = current.toFixed(2);
+    }
+    
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+/* ============ ENHANCED FLASH CELLS ============ */
+const _origFlashCell = typeof flashCell !== 'undefined' ? flashCell : null;
+function flashCellEnhanced(el, up) {
+  if (!el) return;
+  el.classList.remove('cell-flash-up', 'cell-flash-dn', 'flash-up', 'flash-dn');
+  void el.offsetWidth;
+  el.classList.add(up ? 'cell-flash-up' : 'cell-flash-dn');
+  el.classList.add(up ? 'flash-up' : 'flash-dn');
+}
+if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
+
+/* ============ ENHANCED TICKLE WITH FLASH ============ */
+const _origTickle = typeof tickle !== 'undefined' ? tickle : null;
 
 </script>
 </body>
