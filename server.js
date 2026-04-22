@@ -11,7 +11,7 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n  🐋 WhaleVault v5.0 — Institutional Intelligence Terminal`);
+  console.log(`\n  🐋 WhaleVault v7.0 — Smart Money Intelligence`);
   console.log(`  🌐 http://localhost:${PORT}`);
   console.log(`  📊 Ready\n`);
 });
