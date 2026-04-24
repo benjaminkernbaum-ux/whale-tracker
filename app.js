@@ -1,32 +1,34 @@
 // ============================================================
-// WHALEVAULT v5.0 — Institutional Intelligence Terminal
-// Focus: Gold, Oil, Silver, Indices, Equities & Selected Crypto
-// APIs: CoinGecko (crypto, free) + Finnhub (stocks/commodities)
-// Language: English
+// WHALEVAULT v6.0 — Global Equity Intelligence Terminal
+// Markets: S&P500, NASDAQ, DOW, RUT, DAX, CAC40, FTSE, HK50, NI225
+// Equities: Magnificent 7 + 20 Major Stocks
+// Sources: SEC EDGAR, BaFin, AMF, FCA, EDINET, HKEX, CFTC
+// APIs: Finnhub (stocks/indices)
 // ============================================================
 
 // ===================== LIVE DATA MANAGER =====================
 const LiveData = {
     finnhubMap: {
-        'XAU/USD': 'OANDA:XAU_USD', 'XAG/USD': 'OANDA:XAG_USD',
-        'WTI': 'OANDA:WTICO_USD', 'BRENT': 'OANDA:BCO_USD',
-        'NG': 'OANDA:NATGAS_USD', 'COPPER': 'OANDA:COPPER_USD',
-        'US500': 'SPY', 'US30': 'DIA', 'US100': 'QQQ',
-        'HK50': 'EWH', 'DAX': 'EWG', 'FTSE': 'EWU', 'NIKKEI': 'EWJ',
+        // Indices via ETFs
+        'US500': 'SPY', 'US100': 'QQQ', 'US30': 'DIA', 'RUT': 'IWM',
+        'DAX': 'EWG', 'CAC40': 'EWQ', 'FTSE': 'EWU', 'HK50': 'EWH', 'NI225': 'EWJ',
+        // Magnificent 7
         'AAPL':'AAPL','MSFT':'MSFT','NVDA':'NVDA','TSLA':'TSLA',
-        'AMZN':'AMZN','META':'META','GOOGL':'GOOGL','JPM':'JPM','GS':'GS',
+        'AMZN':'AMZN','META':'META','GOOGL':'GOOGL',
+        // Major US Equities
+        'JPM':'JPM','GS':'GS','BAC':'BAC','MS':'MS',
+        'JNJ':'JNJ','UNH':'UNH','PFE':'PFE',
+        'XOM':'XOM','CVX':'CVX',
+        'WMT':'WMT','KO':'KO','PG':'PG',
+        'BA':'BA','CAT':'CAT','GE':'GE','V':'V',
     },
     indexMultiplier: {
-        'US500': 10.1, 'US30': 97.5, 'US100': 49.0,
-        'HK50': 720, 'DAX': 625, 'FTSE': 274, 'NIKKEI': 530,
-    },
-    cryptoIds: {
-        'BTC/USD': 'bitcoin', 'ETH/USD': 'ethereum', 'XRP/USD': 'ripple',
-        'BNB/USD': 'binancecoin', 'TRX/USD': 'tron', 'SOL/USD': 'solana',
+        'US500': 10.1, 'US30': 97.5, 'US100': 49.0, 'RUT': 9.2,
+        'HK50': 720, 'DAX': 625, 'CAC40': 280, 'FTSE': 274, 'NI225': 530,
     },
     cache: {},
     CACHE_TTL: 30000,
-    isLive: { crypto: false, stocks: false },
+    isLive: { stocks: false },
 
     getApiKeys() {
         try { return JSON.parse(localStorage.getItem('whalevault_api_keys') || '{}'); }
@@ -37,30 +39,7 @@ const LiveData = {
         return this.cache[key] && (Date.now() - this.cache[key].ts < this.CACHE_TTL);
     },
 
-    async fetchCryptoPrices() {
-        const cacheKey = 'crypto_prices';
-        if (this.isCached(cacheKey)) return this.cache[cacheKey].data;
-        const ids = Object.values(this.cryptoIds).join(',');
-        try {
-            const keys = this.getApiKeys();
-            let url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
-            const headers = {};
-            if (keys.coingecko) {
-                url = `https://pro-api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
-                headers['x-cg-pro-api-key'] = keys.coingecko;
-            }
-            const res = await fetch(url, { headers });
-            if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-            const data = await res.json();
-            this.cache[cacheKey] = { data, ts: Date.now() };
-            this.isLive.crypto = true;
-            return data;
-        } catch(e) {
-            console.warn('CoinGecko error:', e.message);
-            this.isLive.crypto = false;
-            return null;
-        }
-    },
+
 
     async fetchFinnhubQuote(symbol) {
         const keys = this.getApiKeys();
@@ -102,29 +81,12 @@ const LiveData = {
     async syncAll() {
         let updatedCount = 0;
 
-        // 1. Crypto via CoinGecko
-        const cryptoData = await this.fetchCryptoPrices();
-        if (cryptoData) {
-            for (const [symbol, geckoId] of Object.entries(this.cryptoIds)) {
-                const d = cryptoData[geckoId];
-                if (!d) continue;
-                const token = state.tokens.find(t => t.symbol === symbol);
-                if (!token) continue;
-                token.price = d.usd;
-                token.change24h = d.usd_24h_change || token.change24h;
-                token.mcap = d.usd_market_cap || token.mcap;
-                token._vol24h = d.usd_24h_vol || 0;
-                token._live = true;
-                updatedCount++;
-            }
-        }
-
-        // 2. Stocks/Commodities via Finnhub
+        // Stocks/Indices via Finnhub
         const keys = this.getApiKeys();
         if (keys.finnhub) {
-            const nonCrypto = state.tokens.filter(t => t.market !== 'crypto');
-            for (let i = 0; i < nonCrypto.length; i++) {
-                const token = nonCrypto[i];
+            const allTokens = state.tokens;
+            for (let i = 0; i < allTokens.length; i++) {
+                const token = allTokens[i];
                 const quote = await this.fetchFinnhubQuote(token.symbol);
                 if (quote && quote.c > 0) {
                     let price = quote.c;
@@ -140,7 +102,7 @@ const LiveData = {
                     token._live = true;
                     updatedCount++;
                 }
-                if (i < nonCrypto.length - 1) await new Promise(r => setTimeout(r, 80));
+                if (i < allTokens.length - 1) await new Promise(r => setTimeout(r, 80));
             }
         }
 
@@ -149,18 +111,13 @@ const LiveData = {
         if (fng !== null) state.fearGreedIndex = fng;
 
         // Update mode badge
-        const anyLive = this.isLive.crypto || this.isLive.stocks;
         const badge = document.getElementById('mode-badge');
         const label = badge.querySelector('.mode-label');
-        if (this.isLive.crypto && this.isLive.stocks) {
+        if (this.isLive.stocks) {
             label.textContent = '🟢 LIVE';
             badge.style.background = 'rgba(16,185,129,0.1)';
             badge.style.borderColor = 'rgba(16,185,129,0.2)';
             badge.style.color = '#10b981';
-        } else if (anyLive) {
-            label.textContent = '🟡 PARTIAL';
-            badge.style.background = 'rgba(245,158,11,0.1)';
-            badge.style.borderColor = 'rgba(245,158,11,0.2)';
         } else {
             label.textContent = 'DEMO';
             badge.style.background = '';
@@ -174,178 +131,164 @@ const LiveData = {
 
 // ===================== ASSET DATA =====================
 const TOKENS = [
-    // COMMODITIES
-    { symbol: 'XAU/USD', name: 'Gold', price: 3085.40, mcap: 0, change24h: 1.12, change7d: 3.45, assetClass: 'Commodity', market: 'commodities', icon: '🥇' },
-    { symbol: 'XAG/USD', name: 'Silver', price: 34.28, mcap: 0, change24h: -0.67, change7d: 2.10, assetClass: 'Commodity', market: 'commodities', icon: '🥈' },
-    { symbol: 'WTI', name: 'Crude Oil', price: 69.45, mcap: 0, change24h: -1.34, change7d: -3.20, assetClass: 'Commodity', market: 'commodities', icon: '🛢️' },
-    { symbol: 'BRENT', name: 'Brent Crude', price: 73.12, mcap: 0, change24h: -0.98, change7d: -2.80, assetClass: 'Commodity', market: 'commodities', icon: '🛢️' },
-    { symbol: 'NG', name: 'Natural Gas', price: 4.12, mcap: 0, change24h: 2.45, change7d: 5.60, assetClass: 'Commodity', market: 'commodities', icon: '🔥' },
-    { symbol: 'COPPER', name: 'Copper', price: 5.02, mcap: 0, change24h: 0.78, change7d: 4.30, assetClass: 'Commodity', market: 'commodities', icon: '🔶' },
-    // INDICES
-    { symbol: 'US500', name: 'S&P 500', price: 5580.25, mcap: 0, change24h: 0.45, change7d: 1.23, assetClass: 'Index', market: 'indices', icon: '🇺🇸' },
-    { symbol: 'US30', name: 'Dow Jones', price: 41890.50, mcap: 0, change24h: 0.62, change7d: 0.89, assetClass: 'Index', market: 'indices', icon: '🇺🇸' },
-    { symbol: 'US100', name: 'Nasdaq 100', price: 19420.80, mcap: 0, change24h: -0.34, change7d: 2.15, assetClass: 'Index', market: 'indices', icon: '🇺🇸' },
-    { symbol: 'HK50', name: 'Hang Seng', price: 23150.40, mcap: 0, change24h: 1.89, change7d: 4.56, assetClass: 'Index', market: 'indices', icon: '🇭🇰' },
-    { symbol: 'DAX', name: 'DAX 40', price: 22580.30, mcap: 0, change24h: -0.23, change7d: 1.45, assetClass: 'Index', market: 'indices', icon: '🇩🇪' },
-    { symbol: 'FTSE', name: 'FTSE 100', price: 8650.70, mcap: 0, change24h: 0.15, change7d: 0.67, assetClass: 'Index', market: 'indices', icon: '🇬🇧' },
-    { symbol: 'NIKKEI', name: 'Nikkei 225', price: 37240.10, mcap: 0, change24h: -1.12, change7d: -2.30, assetClass: 'Index', market: 'indices', icon: '🇯🇵' },
-    // EQUITIES
-    { symbol: 'AAPL', name: 'Apple', price: 217.90, mcap: 3340000000000, change24h: 0.67, change7d: 2.34, assetClass: 'Equity', market: 'equities', icon: '🍎' },
-    { symbol: 'MSFT', name: 'Microsoft', price: 420.50, mcap: 3120000000000, change24h: 1.23, change7d: 3.45, assetClass: 'Equity', market: 'equities', icon: '💻' },
-    { symbol: 'NVDA', name: 'NVIDIA', price: 112.80, mcap: 2750000000000, change24h: -2.15, change7d: -5.30, assetClass: 'Equity', market: 'equities', icon: '🎮' },
-    { symbol: 'TSLA', name: 'Tesla', price: 268.40, mcap: 855000000000, change24h: 3.45, change7d: 8.90, assetClass: 'Equity', market: 'equities', icon: '🚗' },
-    { symbol: 'AMZN', name: 'Amazon', price: 198.30, mcap: 2050000000000, change24h: 0.89, change7d: 1.56, assetClass: 'Equity', market: 'equities', icon: '📦' },
-    { symbol: 'META', name: 'Meta', price: 585.20, mcap: 1480000000000, change24h: -0.56, change7d: 2.10, assetClass: 'Equity', market: 'equities', icon: '👤' },
-    { symbol: 'GOOGL', name: 'Alphabet', price: 163.70, mcap: 2010000000000, change24h: 0.34, change7d: 1.89, assetClass: 'Equity', market: 'equities', icon: '🔍' },
-    { symbol: 'JPM', name: 'JP Morgan', price: 245.80, mcap: 710000000000, change24h: 0.78, change7d: 3.20, assetClass: 'Equity', market: 'equities', icon: '🏦' },
-    { symbol: 'GS', name: 'Goldman Sachs', price: 540.30, mcap: 178000000000, change24h: -0.45, change7d: 1.23, assetClass: 'Equity', market: 'equities', icon: '🏦' },
-    // CRYPTO (6 selected)
-    { symbol: 'BTC/USD', name: 'Bitcoin', price: 87432, mcap: 1720000000000, change24h: 2.34, change7d: 5.12, assetClass: 'Crypto', market: 'crypto', icon: '₿' },
-    { symbol: 'ETH/USD', name: 'Ethereum', price: 3245, mcap: 390000000000, change24h: -1.23, change7d: 3.45, assetClass: 'Crypto', market: 'crypto', icon: 'Ξ' },
-    { symbol: 'XRP/USD', name: 'Ripple', price: 2.34, mcap: 134000000000, change24h: -0.45, change7d: 1.23, assetClass: 'Crypto', market: 'crypto', icon: '💎' },
-    { symbol: 'BNB/USD', name: 'Binance Coin', price: 612, mcap: 91000000000, change24h: 0.89, change7d: -2.10, assetClass: 'Crypto', market: 'crypto', icon: '🟡' },
-    { symbol: 'TRX/USD', name: 'TRON', price: 0.238, mcap: 21500000000, change24h: 1.56, change7d: 4.30, assetClass: 'Crypto', market: 'crypto', icon: '⚡' },
-    { symbol: 'SOL/USD', name: 'Solana', price: 178.5, mcap: 82000000000, change24h: 4.56, change7d: 12.30, assetClass: 'Crypto', market: 'crypto', icon: '☀️' },
+    // INDICES — Americas
+    { symbol: 'US500', name: 'S&P 500', price: 5580.25, mcap: 0, change24h: 0.45, change7d: 1.23, assetClass: 'Index', market: 'indices', region: 'us', icon: '🇺🇸' },
+    { symbol: 'US100', name: 'NASDAQ 100', price: 19420.80, mcap: 0, change24h: -0.34, change7d: 2.15, assetClass: 'Index', market: 'indices', region: 'us', icon: '🇺🇸' },
+    { symbol: 'US30', name: 'Dow Jones 30', price: 41890.50, mcap: 0, change24h: 0.62, change7d: 0.89, assetClass: 'Index', market: 'indices', region: 'us', icon: '🇺🇸' },
+    { symbol: 'RUT', name: 'Russell 2000', price: 2045.30, mcap: 0, change24h: -1.12, change7d: -2.50, assetClass: 'Index', market: 'indices', region: 'us', icon: '🇺🇸' },
+    // INDICES — Europe
+    { symbol: 'DAX', name: 'DAX 40', price: 22580.30, mcap: 0, change24h: -0.23, change7d: 1.45, assetClass: 'Index', market: 'indices', region: 'eu', icon: '🇩🇪' },
+    { symbol: 'CAC40', name: 'CAC 40', price: 7880.60, mcap: 0, change24h: 0.56, change7d: 0.90, assetClass: 'Index', market: 'indices', region: 'eu', icon: '🇫🇷' },
+    { symbol: 'FTSE', name: 'FTSE 100', price: 8650.70, mcap: 0, change24h: 0.15, change7d: 0.67, assetClass: 'Index', market: 'indices', region: 'eu', icon: '🇬🇧' },
+    // INDICES — Asia
+    { symbol: 'HK50', name: 'Hang Seng 50', price: 23150.40, mcap: 0, change24h: 1.89, change7d: 4.56, assetClass: 'Index', market: 'indices', region: 'asia', icon: '🇭🇰' },
+    { symbol: 'NI225', name: 'Nikkei 225', price: 37240.10, mcap: 0, change24h: -1.12, change7d: -2.30, assetClass: 'Index', market: 'indices', region: 'asia', icon: '🇯🇵' },
+
+    // MAGNIFICENT 7
+    { symbol: 'AAPL', name: 'Apple', price: 217.90, mcap: 3340e9, change24h: 0.67, change7d: 2.34, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🍎', sector: 'Tech' },
+    { symbol: 'MSFT', name: 'Microsoft', price: 420.50, mcap: 3120e9, change24h: 1.23, change7d: 3.45, assetClass: 'Equity', market: 'equities', region: 'us', icon: '💻', sector: 'Tech' },
+    { symbol: 'NVDA', name: 'NVIDIA', price: 112.80, mcap: 2750e9, change24h: -2.15, change7d: -5.30, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🎮', sector: 'Semiconductors' },
+    { symbol: 'GOOGL', name: 'Alphabet', price: 163.70, mcap: 2010e9, change24h: 0.34, change7d: 1.89, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🔍', sector: 'Tech' },
+    { symbol: 'AMZN', name: 'Amazon', price: 198.30, mcap: 2050e9, change24h: 0.89, change7d: 1.56, assetClass: 'Equity', market: 'equities', region: 'us', icon: '📦', sector: 'Consumer/Cloud' },
+    { symbol: 'META', name: 'Meta Platforms', price: 585.20, mcap: 1480e9, change24h: -0.56, change7d: 2.10, assetClass: 'Equity', market: 'equities', region: 'us', icon: '👤', sector: 'Tech' },
+    { symbol: 'TSLA', name: 'Tesla', price: 268.40, mcap: 855e9, change24h: 3.45, change7d: 8.90, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🚗', sector: 'EV/Energy' },
+
+    // MAJOR US EQUITIES
+    { symbol: 'JPM', name: 'JP Morgan', price: 245.80, mcap: 710e9, change24h: 0.78, change7d: 3.20, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🏦', sector: 'Banking' },
+    { symbol: 'GS', name: 'Goldman Sachs', price: 540.30, mcap: 178e9, change24h: -0.45, change7d: 1.23, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🏦', sector: 'Banking' },
+    { symbol: 'BAC', name: 'Bank of America', price: 42.80, mcap: 340e9, change24h: 0.90, change7d: 2.10, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🏦', sector: 'Banking' },
+    { symbol: 'MS', name: 'Morgan Stanley', price: 108.50, mcap: 175e9, change24h: 0.55, change7d: 1.80, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🏦', sector: 'Banking' },
+    { symbol: 'JNJ', name: 'Johnson & Johnson', price: 162.40, mcap: 390e9, change24h: -0.20, change7d: 0.45, assetClass: 'Equity', market: 'equities', region: 'us', icon: '💊', sector: 'Healthcare' },
+    { symbol: 'UNH', name: 'UnitedHealth', price: 520.30, mcap: 480e9, change24h: 0.34, change7d: 1.20, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🏥', sector: 'Healthcare' },
+    { symbol: 'PFE', name: 'Pfizer', price: 28.90, mcap: 163e9, change24h: -1.20, change7d: -3.40, assetClass: 'Equity', market: 'equities', region: 'us', icon: '💉', sector: 'Pharma' },
+    { symbol: 'XOM', name: 'ExxonMobil', price: 118.60, mcap: 498e9, change24h: 0.45, change7d: 2.30, assetClass: 'Equity', market: 'equities', region: 'us', icon: '⛽', sector: 'Energy' },
+    { symbol: 'CVX', name: 'Chevron', price: 162.80, mcap: 305e9, change24h: -0.30, change7d: 1.10, assetClass: 'Equity', market: 'equities', region: 'us', icon: '⛽', sector: 'Energy' },
+    { symbol: 'WMT', name: 'Walmart', price: 78.50, mcap: 632e9, change24h: 0.22, change7d: 0.80, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🛒', sector: 'Consumer' },
+    { symbol: 'KO', name: 'Coca-Cola', price: 62.40, mcap: 270e9, change24h: 0.10, change7d: 0.50, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🥤', sector: 'Consumer' },
+    { symbol: 'PG', name: 'Procter & Gamble', price: 170.20, mcap: 401e9, change24h: -0.15, change7d: 0.65, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🧴', sector: 'Consumer' },
+    { symbol: 'BA', name: 'Boeing', price: 178.90, mcap: 111e9, change24h: -1.80, change7d: -4.20, assetClass: 'Equity', market: 'equities', region: 'us', icon: '✈️', sector: 'Industrial' },
+    { symbol: 'CAT', name: 'Caterpillar', price: 365.40, mcap: 178e9, change24h: 0.90, change7d: 3.50, assetClass: 'Equity', market: 'equities', region: 'us', icon: '🚜', sector: 'Industrial' },
+    { symbol: 'GE', name: 'GE Aerospace', price: 185.60, mcap: 202e9, change24h: 0.45, change7d: 2.10, assetClass: 'Equity', market: 'equities', region: 'us', icon: '⚙️', sector: 'Industrial' },
+    { symbol: 'V', name: 'Visa', price: 298.70, mcap: 600e9, change24h: 0.35, change7d: 1.40, assetClass: 'Equity', market: 'equities', region: 'us', icon: '💳', sector: 'FinTech' },
+
 ];
 
-// ===================== ENTITY & LABEL DATA =====================
+// ===================== ENTITY DATA — 30+ Institutions =====================
 const ENTITY_PROFILES = {
-    'BlackRock': { ceo: 'Larry Fink', aum: 10500000000000, strategy: 'Multi-Asset', cik: '1364742', type: 'institutional', icon: '🏛️', reputation: 95, founded: 1988, hq: 'New York, NY', sector: 'Asset Management', track: { win: 72, avg90d: 8.4, trades: 2340 } },
-    'Bridgewater Associates': { ceo: 'Ray Dalio', aum: 124000000000, strategy: 'Global Macro', cik: '1350694', type: 'institutional', icon: '🏛️', reputation: 92, founded: 1975, hq: 'Westport, CT', sector: 'Hedge Fund', track: { win: 68, avg90d: 12.1, trades: 890 } },
-    'Vanguard': { ceo: 'Tim Buckley', aum: 8600000000000, strategy: 'Index/Passive', cik: '102909', type: 'institutional', icon: '🏛️', reputation: 88, founded: 1975, hq: 'Malvern, PA', sector: 'Asset Management', track: { win: 64, avg90d: 4.2, trades: 1200 } },
-    'Citadel': { ceo: 'Ken Griffin', aum: 62000000000, strategy: 'Quant/Market Making', cik: '1423053', type: 'institutional', icon: '🏛️', reputation: 94, founded: 1990, hq: 'Miami, FL', sector: 'Hedge Fund', track: { win: 78, avg90d: 15.3, trades: 12450 } },
-    'Renaissance Technologies': { ceo: 'Peter Brown', aum: 106000000000, strategy: 'Quantitative', cik: '1037389', type: 'institutional', icon: '🏛️', reputation: 98, founded: 1982, hq: 'East Setauket, NY', sector: 'Hedge Fund', track: { win: 82, avg90d: 18.7, trades: 8900 } },
-    'Goldman Sachs Trading': { ceo: 'David Solomon', aum: 2800000000000, strategy: 'Multi-Strategy', cik: '886982', type: 'institutional', icon: '🏦', reputation: 90, founded: 1869, hq: 'New York, NY', sector: 'Investment Bank', track: { win: 70, avg90d: 9.2, trades: 15800 } },
-    'JP Morgan Asset Mgmt': { ceo: 'Jamie Dimon (CEO)', aum: 3000000000000, strategy: 'Multi-Asset', cik: '19617', type: 'institutional', icon: '🏦', reputation: 91, founded: 2000, hq: 'New York, NY', sector: 'Investment Bank', track: { win: 71, avg90d: 7.8, trades: 9200 } },
-    'Norway Sovereign Fund': { ceo: 'Nicolai Tangen', aum: 1700000000000, strategy: 'Sovereign Wealth', cik: '1552797', type: 'institutional', icon: '🇳🇴', reputation: 93, founded: 1990, hq: 'Oslo, Norway', sector: 'Sovereign Fund', track: { win: 65, avg90d: 5.1, trades: 420 } },
-    'Abu Dhabi Investment Authority': { ceo: 'Hamed bin Zayed', aum: 993000000000, strategy: 'Sovereign Diversified', cik: null, type: 'institutional', icon: '🇦🇪', reputation: 89, founded: 1976, hq: 'Abu Dhabi, UAE', sector: 'Sovereign Fund', track: { win: 66, avg90d: 6.3, trades: 310 } },
-    'Berkshire Hathaway': { ceo: 'Warren Buffett', aum: 370000000000, strategy: 'Value Investing', cik: '1067983', type: 'institutional', icon: '🏛️', reputation: 97, founded: 1965, hq: 'Omaha, NE', sector: 'Conglomerate', track: { win: 71, avg90d: 5.8, trades: 156 } },
-    'PIMCO': { ceo: 'Emmanuel Roman', aum: 1740000000000, strategy: 'Fixed Income/Macro', cik: '811830', type: 'institutional', icon: '🏛️', reputation: 87, founded: 1971, hq: 'Newport Beach, CA', sector: 'Asset Management', track: { win: 63, avg90d: 3.9, trades: 760 } },
-    'Two Sigma': { ceo: 'John Overdeck', aum: 60000000000, strategy: 'Systematic/AI', cik: '1479506', type: 'institutional', icon: '🏛️', reputation: 91, founded: 2001, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 71, avg90d: 9.8, trades: 5600 } },
-    'D.E. Shaw': { ceo: 'David Shaw', aum: 55000000000, strategy: 'Multi-Strategy', cik: '1009207', type: 'institutional', icon: '🏛️', reputation: 90, founded: 1988, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 74, avg90d: 11.2, trades: 4200 } },
-    'Millennium Management': { ceo: 'Israel Englander', aum: 59000000000, strategy: 'Multi-Manager', cik: '1273087', type: 'institutional', icon: '🏛️', reputation: 88, founded: 1989, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 69, avg90d: 7.6, trades: 6700 } },
-    'Point72': { ceo: 'Steve Cohen', aum: 27000000000, strategy: 'Discretionary/Quant', cik: '1603466', type: 'institutional', icon: '🏛️', reputation: 86, founded: 2014, hq: 'Stamford, CT', sector: 'Hedge Fund', track: { win: 66, avg90d: 6.4, trades: 3100 } },
-    'Tiger Global': { ceo: 'Chase Coleman', aum: 20000000000, strategy: 'Growth/Tech', cik: '1167483', type: 'institutional', icon: '🏛️', reputation: 82, founded: 2001, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 59, avg90d: -3.2, trades: 1890 } },
-    'Soros Fund Management': { ceo: 'George Soros', aum: 28000000000, strategy: 'Global Macro', cik: '1029160', type: 'institutional', icon: '🏛️', reputation: 96, founded: 1970, hq: 'New York, NY', sector: 'Family Office', track: { win: 73, avg90d: 14.5, trades: 540 } },
-    'Paulson & Co': { ceo: 'John Paulson', aum: 3000000000, strategy: 'Event-Driven/Gold', cik: '1035674', type: 'institutional', icon: '🏛️', reputation: 79, founded: 1994, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 55, avg90d: 2.1, trades: 180 } },
-    'AQR Capital': { ceo: 'Cliff Asness', aum: 98000000000, strategy: 'Systematic/Factor', cik: '1167557', type: 'institutional', icon: '🏛️', reputation: 85, founded: 1998, hq: 'Greenwich, CT', sector: 'Hedge Fund', track: { win: 67, avg90d: 8.0, trades: 2400 } },
-    'Balyasny Asset Mgmt': { ceo: 'Dmitry Balyasny', aum: 21000000000, strategy: 'Multi-Strategy', cik: '1336528', type: 'institutional', icon: '🏛️', reputation: 83, founded: 2001, hq: 'Chicago, IL', sector: 'Hedge Fund', track: { win: 70, avg90d: 10.5, trades: 3800 } },
-    'Pershing Square Capital': { ceo: 'Bill Ackman', aum: 18000000000, strategy: 'Activist/Concentrated', cik: '1336528', type: 'institutional', icon: '🏛️', reputation: 84, founded: 2004, hq: 'New York, NY', sector: 'Hedge Fund', track: { win: 62, avg90d: 7.3, trades: 95 } },
-    // Crypto whales
-    'Binance Cold Wallet': { ceo: 'CZ (Changpeng Zhao)', aum: 82000000000, strategy: 'Exchange Reserve', cik: null, type: 'crypto', icon: '🟡', reputation: 78, founded: 2017, hq: 'Global', sector: 'Exchange', track: { win: 0, avg90d: 0, trades: 45600 } },
-    'Jump Trading Crypto': { ceo: 'Kanav Kariya', aum: 8000000000, strategy: 'HFT/Market Making', cik: null, type: 'crypto', icon: '🐋', reputation: 85, founded: 1999, hq: 'Chicago, IL', sector: 'Prop Trading', track: { win: 76, avg90d: 22.4, trades: 98000 } },
-    'Wintermute': { ceo: 'Evgeny Gaevoy', aum: 4500000000, strategy: 'Liquidity Provider', cik: null, type: 'crypto', icon: '🐋', reputation: 80, founded: 2017, hq: 'London, UK', sector: 'Market Maker', track: { win: 73, avg90d: 19.1, trades: 120000 } },
-    'Vitalik Buterin': { ceo: 'Vitalik Buterin', aum: 2100000000, strategy: 'DeFi/Governance', cik: null, type: 'crypto', icon: '⟠', reputation: 95, founded: 2013, hq: 'Global', sector: 'Founder', track: { win: 68, avg90d: 34.5, trades: 2800 } },
-    'Galaxy Digital': { ceo: 'Mike Novogratz', aum: 5400000000, strategy: 'Crypto VC/Trading', cik: null, type: 'crypto', icon: '🌌', reputation: 76, founded: 2018, hq: 'New York, NY', sector: 'Crypto Fund', track: { win: 64, avg90d: 15.8, trades: 4200 } },
-    'Crypto Whale #1': { ceo: 'Unknown', aum: 920000000, strategy: 'Accumulation', cik: null, type: 'crypto', icon: '🐋', reputation: 60, founded: null, hq: 'Unknown', sector: 'Whale', track: { win: 61, avg90d: 8.9, trades: 320 } },
+    // US Asset Managers & Hedge Funds
+    'BlackRock': { ceo: 'Larry Fink', aum: 10500e9, strategy: 'Multi-Asset', cik: '1364742', type: 'institutional', region: 'us', icon: '🏛️', reputation: 95, founded: 1988, hq: 'New York, NY', sector: 'Asset Management', regulator: 'sec', track: { win: 72, avg90d: 8.4, trades: 2340 } },
+    'Vanguard': { ceo: 'Tim Buckley', aum: 8600e9, strategy: 'Index/Passive', cik: '102909', type: 'institutional', region: 'us', icon: '🏛️', reputation: 88, founded: 1975, hq: 'Malvern, PA', sector: 'Asset Management', regulator: 'sec', track: { win: 64, avg90d: 4.2, trades: 1200 } },
+    'State Street': { ceo: 'Ron O\'Hanley', aum: 4100e9, strategy: 'Index/ETF', cik: '93751', type: 'institutional', region: 'us', icon: '🏛️', reputation: 86, founded: 1792, hq: 'Boston, MA', sector: 'Asset Management', regulator: 'sec', track: { win: 62, avg90d: 3.8, trades: 980 } },
+    'Fidelity': { ceo: 'Abigail Johnson', aum: 4500e9, strategy: 'Active/Index', cik: '315066', type: 'institutional', region: 'us', icon: '🏛️', reputation: 87, founded: 1946, hq: 'Boston, MA', sector: 'Asset Management', regulator: 'sec', track: { win: 66, avg90d: 5.1, trades: 1560 } },
+    'Bridgewater Associates': { ceo: 'Ray Dalio', aum: 124e9, strategy: 'Global Macro', cik: '1350694', type: 'institutional', region: 'us', icon: '🏛️', reputation: 92, founded: 1975, hq: 'Westport, CT', sector: 'Hedge Fund', regulator: 'sec', track: { win: 68, avg90d: 12.1, trades: 890 } },
+    'Citadel': { ceo: 'Ken Griffin', aum: 62e9, strategy: 'Quant/Market Making', cik: '1423053', type: 'institutional', region: 'us', icon: '🏛️', reputation: 94, founded: 1990, hq: 'Miami, FL', sector: 'Hedge Fund', regulator: 'sec', track: { win: 78, avg90d: 15.3, trades: 12450 } },
+    'Renaissance Technologies': { ceo: 'Peter Brown', aum: 106e9, strategy: 'Quantitative', cik: '1037389', type: 'institutional', region: 'us', icon: '🏛️', reputation: 98, founded: 1982, hq: 'East Setauket, NY', sector: 'Hedge Fund', regulator: 'sec', track: { win: 82, avg90d: 18.7, trades: 8900 } },
+    'Goldman Sachs AM': { ceo: 'David Solomon', aum: 2800e9, strategy: 'Multi-Strategy', cik: '886982', type: 'institutional', region: 'us', icon: '🏦', reputation: 90, founded: 1869, hq: 'New York, NY', sector: 'Investment Bank', regulator: 'sec', track: { win: 70, avg90d: 9.2, trades: 15800 } },
+    'JP Morgan AM': { ceo: 'Jamie Dimon', aum: 3000e9, strategy: 'Multi-Asset', cik: '19617', type: 'institutional', region: 'us', icon: '🏦', reputation: 91, founded: 2000, hq: 'New York, NY', sector: 'Investment Bank', regulator: 'sec', track: { win: 71, avg90d: 7.8, trades: 9200 } },
+    'Berkshire Hathaway': { ceo: 'Warren Buffett', aum: 370e9, strategy: 'Value Investing', cik: '1067983', type: 'institutional', region: 'us', icon: '🏛️', reputation: 97, founded: 1965, hq: 'Omaha, NE', sector: 'Conglomerate', regulator: 'sec', track: { win: 71, avg90d: 5.8, trades: 156 } },
+    'Two Sigma': { ceo: 'John Overdeck', aum: 60e9, strategy: 'Systematic/AI', cik: '1479506', type: 'institutional', region: 'us', icon: '🏛️', reputation: 91, founded: 2001, hq: 'New York, NY', sector: 'Hedge Fund', regulator: 'sec', track: { win: 71, avg90d: 9.8, trades: 5600 } },
+    'D.E. Shaw': { ceo: 'David Shaw', aum: 55e9, strategy: 'Multi-Strategy', cik: '1009207', type: 'institutional', region: 'us', icon: '🏛️', reputation: 90, founded: 1988, hq: 'New York, NY', sector: 'Hedge Fund', regulator: 'sec', track: { win: 74, avg90d: 11.2, trades: 4200 } },
+    'Millennium Management': { ceo: 'Israel Englander', aum: 59e9, strategy: 'Multi-Manager', cik: '1273087', type: 'institutional', region: 'us', icon: '🏛️', reputation: 88, founded: 1989, hq: 'New York, NY', sector: 'Hedge Fund', regulator: 'sec', track: { win: 69, avg90d: 7.6, trades: 6700 } },
+    'Point72': { ceo: 'Steve Cohen', aum: 27e9, strategy: 'Discretionary/Quant', cik: '1603466', type: 'institutional', region: 'us', icon: '🏛️', reputation: 86, founded: 2014, hq: 'Stamford, CT', sector: 'Hedge Fund', regulator: 'sec', track: { win: 66, avg90d: 6.4, trades: 3100 } },
+    'Soros Fund Management': { ceo: 'George Soros', aum: 28e9, strategy: 'Global Macro', cik: '1029160', type: 'institutional', region: 'us', icon: '🏛️', reputation: 96, founded: 1970, hq: 'New York, NY', sector: 'Family Office', regulator: 'sec', track: { win: 73, avg90d: 14.5, trades: 540 } },
+    'PIMCO': { ceo: 'Emmanuel Roman', aum: 1740e9, strategy: 'Fixed Income/Macro', cik: '811830', type: 'institutional', region: 'us', icon: '🏛️', reputation: 87, founded: 1971, hq: 'Newport Beach, CA', sector: 'Asset Management', regulator: 'sec', track: { win: 63, avg90d: 3.9, trades: 760 } },
+    'AQR Capital': { ceo: 'Cliff Asness', aum: 98e9, strategy: 'Systematic/Factor', cik: '1167557', type: 'institutional', region: 'us', icon: '🏛️', reputation: 85, founded: 1998, hq: 'Greenwich, CT', sector: 'Hedge Fund', regulator: 'sec', track: { win: 67, avg90d: 8.0, trades: 2400 } },
+    'Pershing Square': { ceo: 'Bill Ackman', aum: 18e9, strategy: 'Activist/Concentrated', cik: '1336528', type: 'institutional', region: 'us', icon: '🏛️', reputation: 84, founded: 2004, hq: 'New York, NY', sector: 'Hedge Fund', regulator: 'sec', track: { win: 62, avg90d: 7.3, trades: 95 } },
+    'Tiger Global': { ceo: 'Chase Coleman', aum: 20e9, strategy: 'Growth/Tech', cik: '1167483', type: 'institutional', region: 'us', icon: '🏛️', reputation: 82, founded: 2001, hq: 'New York, NY', sector: 'Hedge Fund', regulator: 'sec', track: { win: 59, avg90d: -3.2, trades: 1890 } },
+    'Capital Group': { ceo: 'Tim Armour', aum: 2600e9, strategy: 'Active/Growth', cik: '44201', type: 'institutional', region: 'us', icon: '🏛️', reputation: 89, founded: 1931, hq: 'Los Angeles, CA', sector: 'Asset Management', regulator: 'sec', track: { win: 65, avg90d: 4.5, trades: 800 } },
+    'Wellington Mgmt': { ceo: 'Jean Hynes', aum: 1200e9, strategy: 'Multi-Asset/Active', cik: '106926', type: 'institutional', region: 'us', icon: '🏛️', reputation: 86, founded: 1928, hq: 'Boston, MA', sector: 'Asset Management', regulator: 'sec', track: { win: 64, avg90d: 5.0, trades: 1100 } },
+    'Invesco': { ceo: 'Andrew Schlossberg', aum: 1600e9, strategy: 'Index/Active', cik: '914208', type: 'institutional', region: 'us', icon: '🏛️', reputation: 82, founded: 1935, hq: 'Atlanta, GA', sector: 'Asset Management', regulator: 'sec', track: { win: 61, avg90d: 3.5, trades: 650 } },
+    // European
+    'Norway Sovereign Fund': { ceo: 'Nicolai Tangen', aum: 1700e9, strategy: 'Sovereign Wealth', cik: '1552797', type: 'institutional', region: 'eu', icon: '🇳🇴', reputation: 93, founded: 1990, hq: 'Oslo, Norway', sector: 'Sovereign Fund', regulator: 'bafin', track: { win: 65, avg90d: 5.1, trades: 420 } },
+    'Amundi': { ceo: 'Valérie Baudson', aum: 2300e9, strategy: 'Multi-Asset', cik: null, type: 'institutional', region: 'eu', icon: '🇫🇷', reputation: 84, founded: 2010, hq: 'Paris, France', sector: 'Asset Management', regulator: 'amf', track: { win: 63, avg90d: 4.0, trades: 920 } },
+    'DWS Group': { ceo: 'Stefan Hoops', aum: 900e9, strategy: 'Index/Active', cik: null, type: 'institutional', region: 'eu', icon: '🇩🇪', reputation: 80, founded: 1956, hq: 'Frankfurt, Germany', sector: 'Asset Management', regulator: 'bafin', track: { win: 60, avg90d: 3.2, trades: 540 } },
+    'Schroders': { ceo: 'Peter Harrison', aum: 900e9, strategy: 'Active/Multi-Asset', cik: null, type: 'institutional', region: 'eu', icon: '🇬🇧', reputation: 83, founded: 1804, hq: 'London, UK', sector: 'Asset Management', regulator: 'fca', track: { win: 62, avg90d: 3.8, trades: 470 } },
+    'Legal & General': { ceo: 'António Simões', aum: 1500e9, strategy: 'Index/Insurance', cik: null, type: 'institutional', region: 'eu', icon: '🇬🇧', reputation: 81, founded: 1836, hq: 'London, UK', sector: 'Asset Management', regulator: 'fca', track: { win: 61, avg90d: 3.0, trades: 380 } },
+    // Asia & Sovereign
+    'Abu Dhabi Investment Authority': { ceo: 'Hamed bin Zayed', aum: 993e9, strategy: 'Sovereign Diversified', cik: null, type: 'institutional', region: 'asia', icon: '🇦🇪', reputation: 89, founded: 1976, hq: 'Abu Dhabi, UAE', sector: 'Sovereign Fund', regulator: 'hkex', track: { win: 66, avg90d: 6.3, trades: 310 } },
+    'GIC Singapore': { ceo: 'Lim Chow Kiat', aum: 770e9, strategy: 'Sovereign/Multi-Asset', cik: null, type: 'institutional', region: 'asia', icon: '🇸🇬', reputation: 88, founded: 1981, hq: 'Singapore', sector: 'Sovereign Fund', regulator: 'hkex', track: { win: 67, avg90d: 5.5, trades: 290 } },
+    'Temasek Holdings': { ceo: 'Dilhan Pillay', aum: 380e9, strategy: 'Growth/Strategic', cik: null, type: 'institutional', region: 'asia', icon: '🇸🇬', reputation: 87, founded: 1974, hq: 'Singapore', sector: 'Sovereign Fund', regulator: 'hkex', track: { win: 64, avg90d: 7.2, trades: 210 } },
+    'CIC (China)': { ceo: 'Peng Chun', aum: 1350e9, strategy: 'Sovereign Wealth', cik: null, type: 'institutional', region: 'asia', icon: '🇨🇳', reputation: 85, founded: 2007, hq: 'Beijing, China', sector: 'Sovereign Fund', regulator: 'hkex', track: { win: 63, avg90d: 4.8, trades: 180 } },
+
 };
 
 const WHALE_NAMES = Object.keys(ENTITY_PROFILES);
-
 const TX_TYPES = ['buy', 'sell', 'position', 'hedge'];
-
-const SUBREDDITS = ['wallstreetbets', 'stocks', 'CryptoCurrency', 'commodities', 'Gold'];
-
+const SUBREDDITS = ['wallstreetbets', 'stocks', 'investing', 'options'];
 const TOPICS = [
-    'gold safe haven', 'oil OPEC', 'Fed rate cut', 'inflation', 'recession', 'trade war',
-    'China stimulus', 'strong dollar', 'treasuries', 'tech stocks', 'S&P 500 ATH',
-    'silver industrial', 'gold ETF', 'position sizing', 'geopolitical hedge',
-    'HK50 rally', 'earnings season', 'jobs data', 'CPI surprise', 'yield curve',
-    'smart money', 'COT report', 'institutional flow', 'short squeeze', 'sector rotation',
+    'S&P 500 ATH', 'NASDAQ correction', 'Fed rate cut', 'inflation', 'recession fears',
+    'trade war tariffs', 'China stimulus', 'dollar strength', 'DAX breakout', 'FTSE rally',
+    'earnings season', 'tech selloff', 'Magnificent 7', 'Russell 2000 rotation', 'sector rotation',
+    'smart money flow', 'COT report', 'institutional buying', 'short squeeze', 'dark pool activity',
+    'Nikkei momentum', 'Hang Seng recovery', 'CAC 40 defence', '13F filings', 'options flow',
+    'gold safe haven', 'oil OPEC', 'VIX spike', 'yield curve', 'jobs data', 'CPI surprise',
 ];
 
-// ===================== LEADERBOARD ENTITIES =====================
+// ===================== LEADERBOARD =====================
 const LEADERBOARD_ENTITIES = [
-    { name: 'BlackRock', icon: '🏛️', type: 'institutional', strategy: 'Multi-Asset', aum: 10500000000000, winRate: 72, pnl90d: 8.4, totalVol: 890000000000, txCount: 2340 },
-    { name: 'Bridgewater Associates', icon: '🏛️', type: 'institutional', strategy: 'Macro Hedge', aum: 124000000000, winRate: 68, pnl90d: 12.1, totalVol: 67000000000, txCount: 890 },
-    { name: 'Citadel', icon: '🏛️', type: 'institutional', strategy: 'Quant/Market Making', aum: 62000000000, winRate: 78, pnl90d: 15.3, totalVol: 420000000000, txCount: 12450 },
-    { name: 'Renaissance Tech', icon: '🏛️', type: 'institutional', strategy: 'Quantitative', aum: 106000000000, winRate: 82, pnl90d: 18.7, totalVol: 310000000000, txCount: 8900 },
-    { name: 'Two Sigma', icon: '🏛️', type: 'institutional', strategy: 'Systematic', aum: 60000000000, winRate: 71, pnl90d: 9.8, totalVol: 180000000000, txCount: 5600 },
-    { name: 'D.E. Shaw', icon: '🏛️', type: 'institutional', strategy: 'Multi-Strategy', aum: 55000000000, winRate: 74, pnl90d: 11.2, totalVol: 150000000000, txCount: 4200 },
-    { name: 'Millennium Mgmt', icon: '🏛️', type: 'institutional', strategy: 'Multi-Manager', aum: 59000000000, winRate: 69, pnl90d: 7.6, totalVol: 210000000000, txCount: 6700 },
-    { name: 'Point72', icon: '🏛️', type: 'institutional', strategy: 'Discretionary', aum: 27000000000, winRate: 66, pnl90d: 6.4, totalVol: 89000000000, txCount: 3100 },
-    { name: 'Vanguard', icon: '🏛️', type: 'institutional', strategy: 'Index/Passive', aum: 8600000000000, winRate: 64, pnl90d: 4.2, totalVol: 560000000000, txCount: 1200 },
-    { name: 'Berkshire Hathaway', icon: '🏛️', type: 'institutional', strategy: 'Value Investing', aum: 370000000000, winRate: 71, pnl90d: 5.8, totalVol: 45000000000, txCount: 156 },
-    { name: 'Binance Cold Wallet', icon: '🐋', type: 'crypto', strategy: 'Exchange Reserve', aum: 82000000000, winRate: 0, pnl90d: 0, totalVol: 950000000000, txCount: 45600 },
-    { name: 'Jump Trading Crypto', icon: '🐋', type: 'crypto', strategy: 'Market Making', aum: 8000000000, winRate: 76, pnl90d: 22.4, totalVol: 320000000000, txCount: 98000 },
-    { name: 'Wintermute', icon: '🐋', type: 'crypto', strategy: 'Liquidity Provider', aum: 4500000000, winRate: 73, pnl90d: 19.1, totalVol: 280000000000, txCount: 120000 },
-    { name: 'Alameda Remnant', icon: '🐋', type: 'crypto', strategy: 'Liquidation', aum: 1200000000, winRate: 0, pnl90d: -85.2, totalVol: 12000000000, txCount: 340 },
-    { name: 'Whale 0xd8dA…6045', icon: '🐋', type: 'crypto', strategy: 'DeFi/Governance', aum: 2100000000, winRate: 68, pnl90d: 34.5, totalVol: 5600000000, txCount: 2800 },
+    { name: 'BlackRock', icon: '🏛️', type: 'institutional', strategy: 'Multi-Asset', aum: 10500e9, winRate: 72, pnl90d: 8.4, totalVol: 890e9, txCount: 2340 },
+    { name: 'Vanguard', icon: '🏛️', type: 'institutional', strategy: 'Index/Passive', aum: 8600e9, winRate: 64, pnl90d: 4.2, totalVol: 560e9, txCount: 1200 },
+    { name: 'Citadel', icon: '🏛️', type: 'institutional', strategy: 'Quant/Market Making', aum: 62e9, winRate: 78, pnl90d: 15.3, totalVol: 420e9, txCount: 12450 },
+    { name: 'Renaissance Tech', icon: '🏛️', type: 'institutional', strategy: 'Quantitative', aum: 106e9, winRate: 82, pnl90d: 18.7, totalVol: 310e9, txCount: 8900 },
+    { name: 'Bridgewater', icon: '🏛️', type: 'institutional', strategy: 'Global Macro', aum: 124e9, winRate: 68, pnl90d: 12.1, totalVol: 67e9, txCount: 890 },
+    { name: 'Two Sigma', icon: '🏛️', type: 'institutional', strategy: 'Systematic/AI', aum: 60e9, winRate: 71, pnl90d: 9.8, totalVol: 180e9, txCount: 5600 },
+    { name: 'D.E. Shaw', icon: '🏛️', type: 'institutional', strategy: 'Multi-Strategy', aum: 55e9, winRate: 74, pnl90d: 11.2, totalVol: 150e9, txCount: 4200 },
+    { name: 'Berkshire Hathaway', icon: '🏛️', type: 'institutional', strategy: 'Value Investing', aum: 370e9, winRate: 71, pnl90d: 5.8, totalVol: 45e9, txCount: 156 },
+    { name: 'Norway Sovereign', icon: '🇳🇴', type: 'institutional', strategy: 'Sovereign Wealth', aum: 1700e9, winRate: 65, pnl90d: 5.1, totalVol: 120e9, txCount: 420 },
+    { name: 'Soros Fund Mgmt', icon: '🏛️', type: 'institutional', strategy: 'Global Macro', aum: 28e9, winRate: 73, pnl90d: 14.5, totalVol: 18e9, txCount: 540 },
+
 ];
 
-// ===================== DATA SOURCES =====================
+// ===================== OFFICIAL DATA SOURCES =====================
 const DATA_SOURCES = [
-    { name: 'Whale Alert', icon: '🐋', type: 'Crypto Whale Tracking', desc: 'Real-time monitoring of large blockchain transactions. Detects major BTC, ETH and altcoin movements between wallets and exchanges.', tags: ['crypto', 'blockchain', 'transactions', 'real-time'], url: 'https://whale-alert.io', status: 'active' },
-    { name: 'WhaleWisdom', icon: '🏦', type: 'Institutional Positions (13F)', desc: 'Tracks SEC 13F filings from hedge funds and institutional managers. See what Buffett, Dalio and Soros are buying and selling.', tags: ['equities', 'hedge funds', '13F', 'SEC', 'institutional'], url: 'https://whalewisdom.com', status: 'active' },
-    { name: 'CFTC COT Report', icon: '📊', type: 'Futures Positioning', desc: 'Commitment of Traders — positioning of commercials, large speculators and small traders in gold, oil, silver and index futures.', tags: ['commodities', 'futures', 'gold', 'oil', 'COT'], url: 'https://www.cftc.gov/MarketReports/CommitmentsofTraders', status: 'active' },
-    { name: 'Finviz', icon: '📈', type: 'Screener & Market Map', desc: 'Advanced stock screener with market heatmap, insider trading data, and fundamental analysis for US equities.', tags: ['equities', 'screener', 'insider', 'heatmap'], url: 'https://finviz.com', status: 'active' },
-    { name: 'TradingView', icon: '📉', type: 'Charts & Technical Analysis', desc: 'Leading charting platform with real-time data for commodities, indices, equities and crypto. Community-driven trade ideas.', tags: ['charts', 'technical analysis', 'multi-asset', 'community'], url: 'https://tradingview.com', status: 'active' },
-    { name: 'Koyfin', icon: '💹', type: 'Financial Terminal', desc: 'Bloomberg-style terminal for free. Macro data, valuation metrics, advanced screening and customizable dashboards.', tags: ['macro', 'fundamental', 'terminal', 'valuation'], url: 'https://koyfin.com', status: 'active' },
-    { name: 'Unusual Whales', icon: '🦑', type: 'Options Flow & Dark Pool', desc: 'Detects unusual options activity and dark pool flow in equities. Identifies large smart money bets on stocks.', tags: ['options', 'dark pool', 'smart money', 'equities'], url: 'https://unusualwhales.com', status: 'active' },
-    { name: 'Hyperliquid', icon: '⚡', type: 'Perpetuals & Open Interest', desc: 'Public API with perp positions, open interest and whale trades in crypto. No API key required.', tags: ['crypto', 'perps', 'open interest', 'DeFi'], url: 'https://hyperliquid.xyz', status: 'active' },
-    { name: 'Reddit Sentiment', icon: '💬', type: 'Social Intelligence', desc: 'Sentiment analysis from r/wallstreetbets, r/stocks, r/commodities and r/Gold. Detects emerging trends and narratives.', tags: ['sentiment', 'social', 'Reddit', 'analysis'], url: 'https://reddit.com', status: 'active' },
-    { name: 'World Gold Council', icon: '🥇', type: 'Institutional Gold Data', desc: 'Global gold supply and demand data, central bank purchases, gold ETF flows and country reserves.', tags: ['gold', 'central bank', 'ETF', 'reserves'], url: 'https://www.gold.org', status: 'active' },
-    { name: 'OPEC Monthly Report', icon: '🛢️', type: 'Oil Reports', desc: 'Monthly OPEC reports with supply/demand projections, production by country and impact on oil prices.', tags: ['oil', 'OPEC', 'production', 'report'], url: 'https://www.opec.org', status: 'active' },
-    { name: 'Fear & Greed Index', icon: '😱', type: 'Market Sentiment', desc: 'CNN Fear and Greed Index for equities and Alternative.me for crypto. Market sentiment thermometer.', tags: ['sentiment', 'fear', 'greed', 'market'], url: 'https://edition.cnn.com/markets/fear-and-greed', status: 'active' },
+    { name: 'SEC EDGAR', icon: '🏛️', type: '13F Institutional Filings', region: 'us', desc: 'Official US Securities & Exchange Commission database. 13F-HR quarterly filings from institutional managers reveal exact stock holdings, position changes, and portfolio concentration.', tags: ['13F', 'equities', 'institutional', 'SEC', 'quarterly'], url: 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=13-F&dateb=&owner=include&count=40&search_text=&action=getcompany', status: 'active' },
+    { name: 'SEC 13F Data Sets', icon: '📊', type: 'Quarterly Filing Downloads', region: 'us', desc: 'Flattened, downloadable quarterly data sets extracted from Form 13F XML submissions. The most reliable as-filed official records for batch analysis.', tags: ['13F', 'download', 'historical', 'XML'], url: 'https://www.sec.gov/data/form-13f-data-sets', status: 'active' },
+    { name: 'CFTC COT Report', icon: '📋', type: 'Futures Positioning', region: 'us', desc: 'Commitment of Traders — weekly positioning of commercials, large speculators and managed money in index futures, commodities, and currencies.', tags: ['commodities', 'futures', 'COT', 'positioning'], url: 'https://www.cftc.gov/MarketReports/CommitmentsofTraders', status: 'active' },
+    { name: 'BaFin (Germany)', icon: '🇩🇪', type: 'Voting Rights >3%', region: 'eu', desc: 'German Federal Financial Supervisory Authority. Publishes voting rights notifications when institutional shareholders cross 3%, 5%, 10%, 15%, 20%, 25%, 30%, 50%, or 75% thresholds.', tags: ['DAX', 'Germany', 'voting rights', 'threshold'], url: 'https://www.bafin.de/EN/PublikationenDaten/Datenbanken/Stimmrechte/stimmrechte_node_en.html', status: 'active' },
+    { name: 'AMF BDIF (France)', icon: '🇫🇷', type: 'Major Holdings >5%', region: 'eu', desc: 'Autorité des Marchés Financiers — BDIF database. Major holding notifications triggered at 5%, 10%, 15%, 20%, 25%, 30%, 33%, 50%, 66%, 90%, and 95% thresholds.', tags: ['CAC 40', 'France', 'major holdings', 'threshold'], url: 'https://www.amf-france.org/en/databases-and-tools', status: 'active' },
+    { name: 'FCA / RNS (UK)', icon: '🇬🇧', type: 'TR-1 Major Shareholdings', region: 'eu', desc: 'Financial Conduct Authority — DTR5 rules. TR-1 forms for major shareholding notifications in UK-listed companies. Published via Regulatory News Service (RNS).', tags: ['FTSE', 'UK', 'TR-1', 'shareholding'], url: 'https://www.fca.org.uk/markets/primary-markets/regulatory-disclosures/disclosure-major-shareholdings', status: 'active' },
+    { name: 'EDINET (Japan)', icon: '🇯🇵', type: '5%+ Large Shareholding', region: 'asia', desc: 'Electronic Disclosure for Investors NETwork — FSA Japan. Large shareholding reports required when investors exceed 5% ownership. Available via EDINET API v2.', tags: ['Nikkei', 'Japan', '5% rule', 'FSA'], url: 'https://disclosure2.edinet-fsa.go.jp', status: 'active' },
+    { name: 'HKEX / SFC (HK)', icon: '🇭🇰', type: 'Disclosure of Interests >5%', region: 'asia', desc: 'Hong Kong Exchanges & SFC. Part XV disclosures when shareholders hold 5%+ of voting shares. CCASS data shows custodian-level holdings.', tags: ['Hang Seng', 'Hong Kong', 'DOI', 'CCASS'], url: 'https://www.hkexnews.hk/sdw/search/searchsdw.aspx', status: 'active' },
+    { name: 'WhaleWisdom', icon: '🦑', type: 'Parsed 13F Data', region: 'us', desc: 'Community-built 13F filing explorer. Tracks SEC filings from 5000+ hedge funds and asset managers with quarter-over-quarter comparison.', tags: ['13F', 'hedge funds', 'parsed', 'comparison'], url: 'https://whalewisdom.com', status: 'active' },
+    { name: 'Unusual Whales', icon: '🐙', type: 'Options Flow & Dark Pool', region: 'us', desc: 'Real-time unusual options activity and dark pool prints. Detects large institutional bets on US equities via options and off-exchange trading.', tags: ['options', 'dark pool', 'flow', 'equities'], url: 'https://unusualwhales.com', status: 'active' },
+    { name: 'Finviz', icon: '📈', type: 'Screener & Insider Trading', region: 'us', desc: 'Advanced stock screener with market heatmap, insider trading data from SEC Form 4 filings, and fundamental analysis for US equities.', tags: ['screener', 'insider', 'heatmap', 'fundamentals'], url: 'https://finviz.com', status: 'active' },
+    { name: 'TradingView', icon: '📉', type: 'Charts & Technical Analysis', region: 'global', desc: 'Leading charting platform with real-time data for global indices, equities, commodities. Community-driven trade ideas and technical analysis.', tags: ['charts', 'technical', 'multi-asset'], url: 'https://tradingview.com', status: 'active' },
+    { name: 'Fear & Greed Index', icon: '😱', type: 'Market Sentiment', region: 'us', desc: 'CNN Fear & Greed Index — composite of 7 market indicators tracking investor sentiment from extreme fear (0) to extreme greed (100).', tags: ['sentiment', 'fear', 'greed'], url: 'https://edition.cnn.com/markets/fear-and-greed', status: 'active' },
 ];
 
 // ===================== SOURCE LINK HELPERS =====================
-const CRYPTO_EXPLORERS = {
-    'BTC/USD': [
-        { name: 'Blockchain.com', url: 'https://www.blockchain.com/explorer/mempool/btc', icon: '⛓️' },
-        { name: 'Blockchair', url: 'https://blockchair.com/bitcoin', icon: '🔍' },
-        { name: 'Whale Alert', url: 'https://whale-alert.io/alerts/bitcoin', icon: '🐋' },
-    ],
-    'ETH/USD': [
-        { name: 'Etherscan', url: 'https://etherscan.io', icon: '🔍' },
-        { name: 'Whale Alert', url: 'https://whale-alert.io/alerts/ethereum', icon: '🐋' },
-        { name: 'Blockchain.com', url: 'https://www.blockchain.com/explorer/assets/eth', icon: '⛓️' },
-    ],
-    'XRP/USD': [
-        { name: 'XRPScan', url: 'https://xrpscan.com', icon: '🔍' },
-        { name: 'Bithomp', url: 'https://bithomp.com/explorer', icon: '⛓️' },
-        { name: 'Whale Alert', url: 'https://whale-alert.io/alerts/ripple', icon: '🐋' },
-    ],
-    'BNB/USD': [
-        { name: 'BscScan', url: 'https://bscscan.com', icon: '🔍' },
-        { name: 'Whale Alert', url: 'https://whale-alert.io/alerts/binancechain', icon: '🐋' },
-        { name: 'Binance Explorer', url: 'https://explorer.bnbchain.org', icon: '⛓️' },
-    ],
-    'TRX/USD': [
-        { name: 'Tronscan', url: 'https://tronscan.org', icon: '🔍' },
-        { name: 'Whale Alert', url: 'https://whale-alert.io/alerts/tron', icon: '🐋' },
-    ],
-    'SOL/USD': [
-        { name: 'Solscan', url: 'https://solscan.io', icon: '🔍' },
-        { name: 'Solana Explorer', url: 'https://explorer.solana.com', icon: '⛓️' },
-        { name: 'Whale Alert', url: 'https://whale-alert.io/alerts/solana', icon: '🐋' },
-    ],
-};
-
-function getSourceInfo(market, token) {
-    if (market === 'crypto') {
-        const pool = CRYPTO_EXPLORERS[token] || CRYPTO_EXPLORERS['ETH/USD'];
-        return pool[randInt(0, pool.length)];
-    }
-    const cleanSymbol = token.replace('/USD', '').replace('/', '');
+function getSourceInfo(market, token, entity) {
+    const profile = ENTITY_PROFILES[entity];
+    const reg = profile?.regulator || 'sec';
+    const clean = token.replace('/USD','').replace('/','');
     const sources = {
-        equities: [
-            { name: 'SEC EDGAR', url: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=${encodeURIComponent(cleanSymbol)}&type=13F`, icon: '📋' },
-            { name: 'WhaleWisdom', url: `https://whalewisdom.com/stock/${cleanSymbol.toLowerCase()}`, icon: '🏦' },
-            { name: 'Finviz', url: `https://finviz.com/quote.ashx?t=${cleanSymbol}`, icon: '📈' },
+        sec: [
+            { name: 'SEC EDGAR', url: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${profile?.cik || ''}&type=13F&dateb=&owner=include&count=10`, icon: '🏛️' },
+            { name: 'WhaleWisdom', url: `https://whalewisdom.com/stock/${clean.toLowerCase()}`, icon: '🦑' },
+            { name: 'Finviz', url: `https://finviz.com/quote.ashx?t=${clean}`, icon: '📈' },
         ],
-        commodities: [
-            { name: 'CFTC COT', url: 'https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm', icon: '📊' },
-            { name: 'World Gold Council', url: 'https://www.gold.org/goldhub/data/gold-etfs-holdings-and-flows', icon: '🥇' },
-            { name: 'TradingView', url: `https://www.tradingview.com/symbols/${cleanSymbol}/`, icon: '📉' },
+        bafin: [
+            { name: 'BaFin', url: 'https://www.bafin.de/EN/PublikationenDaten/Datenbanken/Stimmrechte/stimmrechte_node_en.html', icon: '🇩🇪' },
+            { name: 'TradingView', url: `https://www.tradingview.com/symbols/${clean}/`, icon: '📉' },
         ],
-        indices: [
-            { name: 'Finviz', url: 'https://finviz.com/futures.ashx', icon: '📈' },
-            { name: 'TradingView', url: `https://www.tradingview.com/symbols/${cleanSymbol}/`, icon: '📉' },
-            { name: 'Investing.com', url: 'https://www.investing.com/indices/', icon: '🌐' },
+        amf: [
+            { name: 'AMF BDIF', url: 'https://www.amf-france.org/en/databases-and-tools', icon: '🇫🇷' },
+            { name: 'TradingView', url: `https://www.tradingview.com/symbols/${clean}/`, icon: '📉' },
+        ],
+        fca: [
+            { name: 'FCA DTR5', url: 'https://www.fca.org.uk/markets/primary-markets/regulatory-disclosures/disclosure-major-shareholdings', icon: '🇬🇧' },
+            { name: 'LSE RNS', url: 'https://www.londonstockexchange.com/news', icon: '📋' },
+        ],
+        edinet: [
+            { name: 'EDINET', url: 'https://disclosure2.edinet-fsa.go.jp', icon: '🇯🇵' },
+            { name: 'TradingView', url: `https://www.tradingview.com/symbols/${clean}/`, icon: '📉' },
+        ],
+        hkex: [
+            { name: 'HKEX DOI', url: 'https://www.hkexnews.hk/sdw/search/searchsdw.aspx', icon: '🇭🇰' },
+            { name: 'SFC', url: 'https://www.sfc.hk', icon: '🏛️' },
         ],
     };
-    const pool = sources[market] || sources.commodities;
+    const pool = sources[reg] || sources.sec;
     return pool[randInt(0, pool.length)];
 }
 
@@ -353,7 +296,6 @@ function getSourceInfo(market, token) {
 function rand(min, max) { return Math.random() * (max - min) + min; }
 function randInt(min, max) { return Math.floor(rand(min, max)); }
 function randEl(arr) { return arr[randInt(0, arr.length)]; }
-function randAddr() { return '0x' + Array.from({length: 40}, () => '0123456789abcdef'[randInt(0,16)]).join(''); }
 function shortAddr(a) { return a.startsWith('0x') ? a.slice(0,6) + '...' + a.slice(-4) : a; }
 
 function formatUSD(n) {
@@ -371,146 +313,120 @@ function timeAgo(ms) {
     return Math.floor(s / 3600) + 'h ago';
 }
 
-function generateSparkline(points = 24, base = 100, volatility = 5) {
-    const data = [];
-    let val = base;
-    for (let i = 0; i < points; i++) { val += rand(-volatility, volatility); data.push(Math.max(0, val)); }
-    return data;
+// ===================== MARKET SESSION DETECTOR =====================
+function getMarketSessions() {
+    const now = new Date();
+    const utcH = now.getUTCHours();
+    const utcM = now.getUTCMinutes();
+    const t = utcH * 60 + utcM;
+    // US: 13:30-20:00 UTC (9:30-16:00 ET)
+    const usOpen = t >= 810 && t < 1200;
+    const usPre = t >= 720 && t < 810;
+    // EU: 07:00-15:30 UTC (8:00-16:30 CET)
+    const euOpen = t >= 420 && t < 930;
+    const euPre = t >= 360 && t < 420;
+    // Asia: 00:00-06:00 UTC (Tokyo 9:00-15:00 JST)
+    const asiaOpen = t >= 0 && t < 360;
+    const asiaPre = t >= 1380 || (t >= 0 && t < 0); // simplified
+    return {
+        us: usOpen ? 'open' : usPre ? 'premarket' : 'closed',
+        eu: euOpen ? 'open' : euPre ? 'premarket' : 'closed',
+        asia: asiaOpen ? 'open' : 'closed',
+    };
 }
 
-// ===================== SMART MONEY SCORE CALCULATOR =====================
-function calcSmartMoneyScore(entity, amount, type, market) {
+function updateMarketSessions() {
+    const s = getMarketSessions();
+    ['us', 'eu', 'asia'].forEach(r => {
+        const el = document.getElementById('session-' + r);
+        if (el) { el.className = 'session-dot ' + s[r]; el.title = r.toUpperCase() + ' Market: ' + s[r]; }
+    });
+}
+
+// ===================== SMART MONEY SCORE =====================
+function calcSmartMoneyScore(entity, amount, type) {
     const profile = ENTITY_PROFILES[entity];
     if (!profile) return { score: randInt(30, 65), components: {} };
-    let score = 0;
-    const components = {};
-
-    // Reputation weight (0-25)
-    components.reputation = Math.round(profile.reputation * 0.25);
-    score += components.reputation;
-
-    // Track record weight (0-25)
-    components.trackRecord = Math.round((profile.track.win / 100) * 25);
-    score += components.trackRecord;
-
-    // Position size relative to AUM (0-20) — larger relative = more conviction
+    let score = 0; const c = {};
+    c.reputation = Math.round(profile.reputation * 0.25); score += c.reputation;
+    c.trackRecord = Math.round((profile.track.win / 100) * 25); score += c.trackRecord;
     const pctOfAum = (amount / profile.aum) * 100;
-    components.conviction = Math.min(20, Math.round(pctOfAum * 200));
-    score += components.conviction;
-
-    // Market timing / type signal (0-15)
-    if (type === 'buy' && profile.track.avg90d > 0) components.timing = 15;
-    else if (type === 'hedge') components.timing = 12;
-    else if (type === 'position') components.timing = 10;
-    else components.timing = 7;
-    score += components.timing;
-
-    // Diversification bonus (0-15)
-    components.diversification = market === 'crypto' ? 8 : market === 'equities' ? 12 : market === 'commodities' ? 14 : 10;
-    score += components.diversification;
-
-    return { score: Math.min(99, score), components };
+    c.conviction = Math.min(20, Math.round(pctOfAum * 200)); score += c.conviction;
+    c.timing = type === 'buy' && profile.track.avg90d > 0 ? 15 : type === 'hedge' ? 12 : type === 'position' ? 10 : 7;
+    score += c.timing;
+    c.diversification = 10; score += c.diversification;
+    return { score: Math.min(99, score), components: c };
 }
 
 // ===================== FILING INFO GENERATOR =====================
 function generateFilingInfo(market, entity) {
     const profile = ENTITY_PROFILES[entity];
     const now = new Date();
-    const filingDate = new Date(now - randInt(1, 45) * 86400000);
-    const dateStr = filingDate.toISOString().split('T')[0];
-    
-    if (market === 'crypto') {
-        return {
-            type: randEl(['On-Chain TX', 'Wallet Transfer', 'DEX Swap', 'Bridge TX', 'Staking Move']),
-            date: dateStr,
-            cik: null,
-            shares: null,
-            blockNumber: randInt(19000000, 20500000),
-            confirmations: randInt(12, 500),
-            gasUsed: randInt(21000, 350000),
-        };
-    }
-
-    const filingTypes = {
-        equities: ['13F-HR', '13F-HR/A', 'SC 13G', 'SC 13D', 'Form 4'],
-        commodities: ['CFTC COT', 'COT Supplemental', 'Disaggregated COT'],
-        indices: ['13F-HR', 'CFTC COT', 'ADV-H'],
+    const d = new Date(now - randInt(1, 45) * 86400000);
+    const dateStr = d.toISOString().split('T')[0];
+    if (!profile?.regulator) return { type: randEl(['13F-HR', 'SC 13G', 'Form 4']), date: dateStr, cik: profile?.cik || null, shares: randInt(50000, 12e6), prevShares: randInt(30000, 10e6), changePercent: rand(-40, 80).toFixed(1), regulator: 'sec' };
+    const reg = profile?.regulator || 'sec';
+    const types = {
+        sec: ['13F-HR', '13F-HR/A', 'SC 13G', 'SC 13D', 'Form 4'],
+        bafin: ['Voting Rights §33', 'Voting Rights §34', 'Stimmrechte Meldung'],
+        amf: ['Major Holdings', 'Déclaration de franchissement', 'DOI Filing'],
+        fca: ['TR-1 Notification', 'DTR 5 Filing', 'Major Shareholding'],
+        edinet: ['Large Shareholding Report', '5% Rule Filing', 'Change Report'],
+        hkex: ['DOI Part XV', 'CCASS Participant', 'Substantial Shareholder'],
     };
-    const type = randEl(filingTypes[market] || filingTypes.equities);
-    
-    return {
-        type,
-        date: dateStr,
-        cik: profile?.cik || String(randInt(1000000, 2000000)),
-        shares: randInt(50000, 12000000),
-        prevShares: randInt(30000, 10000000),
-        changePercent: rand(-40, 80).toFixed(1),
-    };
+    return { type: randEl(types[reg] || types.sec), date: dateStr, cik: profile?.cik || null, shares: randInt(50000, 12e6), prevShares: randInt(30000, 10e6), changePercent: rand(-40, 80).toFixed(1), regulator: reg };
 }
 
 // ===================== INSIGHT GENERATOR =====================
 function generateInsight(type, market, tokenName, amount, entity) {
     const profile = ENTITY_PROFILES[entity];
-    const ceoFirst = profile?.ceo?.split(' ')[0] || 'Management';
+    const ceo = profile?.ceo?.split(' ')[0] || 'Management';
+    const reg = profile?.regulator || 'sec';
+    const regName = { sec: 'SEC EDGAR', bafin: 'BaFin', amf: 'AMF', fca: 'FCA', edinet: 'EDINET', hkex: 'HKEX' }[reg] || 'regulatory';
 
     const insights = {
         buy: {
-            commodities: [
-                `${entity} adds to ${tokenName} position — new accumulation phase. ${ceoFirst}'s macro thesis favors hard assets as inflation hedge amid rising geopolitical risk.`,
-                `13F filing reveals ${entity} increased ${tokenName} exposure by ${rand(15,60).toFixed(0)}%. Signals strong conviction in commodity supercycle thesis.`,
-                `${entity} initiating new long ${tokenName} position. Portfolio rebalance suggests rotation from duration risk into real assets.`,
-                `Major accumulation by ${entity} in ${tokenName}. Fund positioning aligns with recent central bank purchasing patterns and de-dollarization trend.`,
+            equities: [
+                `${entity} initiates ${formatUSD(amount)} position in ${tokenName}. ${regName} filing shows ${ceo}'s team sees undervaluation vs peer group.`,
+                `13F reveals ${entity} accumulated ${tokenName} shares. High-conviction bet — dark pool data confirms sustained institutional accumulation.`,
+                `${entity} increases ${tokenName} stake by ${rand(10,45).toFixed(0)}%. ${regName} filing detected by WhaleVault — contrarian play amid sector weakness.`,
             ],
             indices: [
-                `${entity} increasing exposure to ${tokenName}. ${ceoFirst} sees value after recent pullback — risk/reward now favorable per internal models.`,
-                `Systematic buying by ${entity} in ${tokenName}. Factor models triggering momentum and mean-reversion signals simultaneously.`,
-                `${entity} adds ${tokenName} exposure ahead of earnings season. Macro overlay suggests broadening market participation.`,
-            ],
-            equities: [
-                `${entity} initiates new position in ${tokenName} — ${formatUSD(amount)} stake. ${ceoFirst} sees undervaluation relative to peer group.`,
-                `13F reveals ${entity} accumulated ${tokenName} shares. Position sizing suggests high-conviction bet on sector rotation.`,
-                `${entity} increases ${tokenName} stake by ${rand(10,45).toFixed(0)}%. Dark pool activity confirms sustained institutional accumulation over 5 sessions.`,
-            ],
-            crypto: [
-                `${entity} moves ${formatUSD(amount)} in ${tokenName} to cold storage — long-term accumulation signal. On-chain metrics show declining exchange reserves.`,
-                `Large ${tokenName} purchase by ${entity}. Wallet analysis shows DCA pattern over past 14 days — total exposure now exceeds ${formatUSD(amount * rand(3,8))}.`,
-                `${entity} onboards ${formatUSD(amount)} ${tokenName}. Coincides with whale accumulation zone identified by on-chain intelligence.`,
+                `${entity} increasing exposure to ${tokenName}. ${ceo} sees value after pullback — systematic models triggered momentum signals.`,
+                `${entity} adds ${tokenName} exposure ahead of earnings season. ${regName} records show broadening market participation thesis.`,
             ],
         },
         sell: {
-            commodities: [
-                `${entity} reduces ${tokenName} exposure — partial profit-taking after ${rand(8,25).toFixed(0)}% rally. Position decreased but still maintains core long.`,
-                `${entity} trimming ${tokenName} allocation. ${ceoFirst} rotating proceeds into shorter-duration instruments ahead of Fed decision.`,
+            equities: [
+                `${entity} exiting ${tokenName} — ${formatUSD(amount)} divestment. ${regName} filing suggests rotation from growth to value/defensives.`,
+                `${entity} reduces ${tokenName} stake per ${regName}. Post-earnings repositioning — limited upside at current multiples.`,
             ],
             indices: [
-                `${entity} reduces ${tokenName} allocation by ${rand(10,35).toFixed(0)}%. Portfolio de-risking as volatility indices signal elevated uncertainty.`,
-                `Systematic selling by ${entity} in ${tokenName}. Risk models flagging overextension — partial reduction, not a full exit.`,
-            ],
-            equities: [
-                `${entity} exiting ${tokenName} position — ${formatUSD(amount)} divestment. Filing suggests sector rotation from growth to value/defensives.`,
-                `${entity} reduces ${tokenName} stake. Post-earnings repositioning — ${ceoFirst}'s team sees limited upside at current multiples.`,
-            ],
-            crypto: [
-                `${entity} transfers ${formatUSD(amount)} ${tokenName} to exchange — potential distribution. On-chain flow suggests partial profit realization.`,
-                `Large ${tokenName} outflow from ${entity} wallet. Exchange deposits spiking — bearish short-term signal for price action.`,
+                `${entity} reduces ${tokenName} allocation by ${rand(10,35).toFixed(0)}%. Risk models flagging overextension — partial de-risk.`,
             ],
         },
         position: {
-            commodities: [`${entity} restructures ${tokenName} portfolio — adjusting futures curve exposure. ${ceoFirst} repositioning for contango/backwardation shifts.`],
-            indices: [`${entity} rebalancing ${tokenName} portfolio weighting. Systematic allocation triggers after sector correlation breakdown.`],
-            equities: [`${entity} adjusts ${tokenName} position size — internal risk committee signaling portfolio concentration limits reached.`],
-            crypto: [`${entity} rebalances ${tokenName} across multiple wallets. On-chain patterns suggest portfolio optimization, not directional trade.`],
+            equities: [`${entity} adjusts ${tokenName} position — ${regName} filing shows portfolio rebalancing within concentration limits.`],
+            indices: [`${entity} rebalancing ${tokenName} weighting. Systematic allocation after sector correlation breakdown.`],
         },
         hedge: {
-            commodities: [`${entity} implements ${tokenName} hedge via options overlay — ${ceoFirst}'s team protecting downside while maintaining upside exposure.`],
-            indices: [`${entity} hedging ${tokenName} exposure with put spreads. VIX positioning suggests expecting 2-4 weeks of elevated volatility.`],
-            equities: [`${entity} hedging ${tokenName} concentration risk with collar strategy — protective put + covered call structure.`],
-            crypto: [`${entity} hedging ${tokenName} position through perpetual shorts — funding rate arbitrage generating additional yield.`],
+            equities: [`${entity} hedging ${tokenName} via collar strategy — protective put + covered call. ${regName} options filing detected.`],
+            indices: [`${entity} hedging ${tokenName} with put spreads. VIX positioning expects 2-4 weeks elevated volatility.`],
         },
     };
-
-    const pool = insights[type]?.[market] || [`${entity} ${type}s ${formatUSD(amount)} in ${tokenName}. Institutional flow detected.`];
+    const pool = insights[type]?.[market] || [`${entity} ${type}s ${formatUSD(amount)} in ${tokenName}. Institutional flow detected via ${regName}.`];
     return randEl(pool);
+}
+
+// ===================== CONVERGENCE SIGNALS =====================
+function generateConvergenceSignals(token, type) {
+    const signals = [];
+    if (Math.random() > 0.4) signals.push({ icon: '📊', label: 'COT Report', detail: type === 'buy' ? 'Commercials net long increasing' : 'Large specs reducing', sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    if (Math.random() > 0.5) signals.push({ icon: '📈', label: 'Options Flow', detail: `Unusual ${type === 'buy' ? 'call' : 'put'} activity detected`, sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    if (Math.random() > 0.55) signals.push({ icon: '💬', label: 'Social Sentiment', detail: `Reddit trending ${type === 'buy' ? 'positive' : 'negative'}`, sentiment: type === 'buy' ? 'bullish' : 'neutral' });
+    if (Math.random() > 0.6) signals.push({ icon: '🏦', label: 'Dark Pool', detail: `${type === 'buy' ? 'Accumulation' : 'Distribution'} patterns`, sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    if (Math.random() > 0.65) signals.push({ icon: '📋', label: '13F Filing', detail: `${type === 'buy' ? 'Position increase' : 'Position decrease'} reported`, sentiment: type === 'buy' ? 'bullish' : 'bearish' });
+    return signals;
 }
 
 // ===================== ALERT GENERATOR =====================
@@ -518,95 +434,92 @@ function generateWhaleAlert() {
     const token = randEl(TOKENS);
     const amount = rand(500000, 80000000);
     const type = randEl(TX_TYPES);
-    const impact = amount > 20000000 ? 'high' : amount > 5000000 ? 'medium' : 'low';
-    const isInstitutional = token.market !== 'crypto';
+    const impact = amount > 20e6 ? 'high' : amount > 5e6 ? 'medium' : 'low';
+    const isInst = true;
     const whaleName = randEl(WHALE_NAMES);
     const profile = ENTITY_PROFILES[whaleName];
-    const source = getSourceInfo(token.market, token.symbol);
+    const source = getSourceInfo(token.market, token.symbol, whaleName);
     const filing = generateFilingInfo(token.market, whaleName);
-    const sms = calcSmartMoneyScore(whaleName, amount, type, token.market);
+    const sms = calcSmartMoneyScore(whaleName, amount, type);
     const insight = generateInsight(type, token.market, token.name, amount, whaleName);
-
-    const actionLabel = {
-        buy: 'Accumulation — new position or increase',
-        sell: 'Reduction — partial or full exit',
-        position: 'Rebalancing — portfolio adjustment',
-        hedge: 'Hedge — risk protection against exposure',
-    };
-
+    const actionLabel = { buy: 'Accumulation — new position or increase', sell: 'Reduction — partial or full exit', position: 'Rebalancing — portfolio adjustment', hedge: 'Hedge — risk protection' };
     return {
-        id: Date.now() + randInt(0, 9999),
-        token: token.symbol, tokenName: token.name,
-        market: token.market, amount, type, impact,
-        from: isInstitutional ? whaleName : randAddr(),
-        to: isInstitutional ? actionLabel[type] : randAddr(),
-        time: Date.now() - randInt(0, 3600000),
-        whaleName,
-        profile,
-        filing,
-        smartMoneyScore: sms.score,
-        smsComponents: sms.components,
-        insight,
+        id: Date.now() + randInt(0, 9999), token: token.symbol, tokenName: token.name,
+        market: token.market, region: token.region, amount, type, impact,
+        from: whaleName,
+        to: actionLabel[type],
+        time: Date.now() - randInt(0, 3600000), whaleName, profile, filing,
+        smartMoneyScore: sms.score, smsComponents: sms.components, insight,
         actionLabel: actionLabel[type],
         sourceUrl: source.url, sourceName: source.name, sourceIcon: source.icon,
         convergenceSignals: generateConvergenceSignals(token, type),
     };
 }
 
-function generateConvergenceSignals(token, type) {
-    const signals = [];
-    if (Math.random() > 0.4) signals.push({ icon: '📊', label: 'COT Report', detail: type === 'buy' ? 'Commercials net long increasing' : 'Large specs reducing longs', sentiment: type === 'buy' ? 'bullish' : 'bearish' });
-    if (Math.random() > 0.5) signals.push({ icon: '📈', label: 'Options Flow', detail: `Unusual ${type === 'buy' ? 'call' : 'put'} activity detected`, sentiment: type === 'buy' ? 'bullish' : 'bearish' });
-    if (Math.random() > 0.6) signals.push({ icon: '🔗', label: 'On-Chain', detail: type === 'buy' ? 'Exchange outflows accelerating' : 'Exchange inflows rising', sentiment: type === 'buy' ? 'bullish' : 'bearish' });
-    if (Math.random() > 0.55) signals.push({ icon: '💬', label: 'Social Sentiment', detail: `Reddit/Twitter sentiment trending ${type === 'buy' ? 'positive' : 'negative'}`, sentiment: type === 'buy' ? 'bullish' : 'neutral' });
-    if (Math.random() > 0.65) signals.push({ icon: '🏦', label: 'Dark Pool', detail: `${type === 'buy' ? 'Accumulation' : 'Distribution'} patterns on dark pools`, sentiment: type === 'buy' ? 'bullish' : 'bearish' });
-    return signals;
+// ===================== FILING GENERATOR =====================
+function generateFiling() {
+    const entity = randEl(WHALE_NAMES.filter(n => ENTITY_PROFILES[n].type === 'institutional'));
+    const profile = ENTITY_PROFILES[entity];
+    const reg = profile.regulator || 'sec';
+    const regName = { sec: 'SEC EDGAR', bafin: 'BaFin', amf: 'AMF', fca: 'FCA', edinet: 'EDINET', hkex: 'HKEX' }[reg];
+    const d = new Date(Date.now() - randInt(1, 90) * 86400000);
+    const stocks = TOKENS.filter(t => t.market === 'equities');
+    const holdingCount = randInt(3, 8);
+    const holdings = [];
+    for (let i = 0; i < holdingCount; i++) {
+        const s = randEl(stocks);
+        const changePct = rand(-30, 50).toFixed(1);
+        holdings.push({ symbol: s.symbol, name: s.name, shares: randInt(10000, 5e6), change: changePct });
+    }
+    return { entity, profile, regulator: reg, regulatorName: regName, date: d.toISOString().split('T')[0], filingType: generateFilingInfo('equities', entity).type, holdings, totalValue: rand(100e6, 50e9), cik: profile.cik };
 }
 
 // ===================== REDDIT POST GENERATOR =====================
 function generateRedditPost() {
     const titles = [
-        'Gold at $3000+, central banks buying like crazy — brace yourselves',
-        'Smart money rotating out of tech into commodities — COT confirms',
-        'Oil could crash: OPEC threatening to increase production',
-        'HK50 broke resistance — China injecting massive stimulus',
-        'S&P 500 at all-time high but breadth is horrible',
-        'Silver is the most asymmetric trade of 2026 — here\'s the data',
-        'BlackRock buying physical gold at record volumes',
+        'S&P 500 at all-time high but breadth is horrible — divergence warning',
+        'Smart money rotating out of tech into value — 13F data confirms',
+        'BlackRock increasing positions in every Mag 7 stock — here\'s the data',
+        'Goldman Sachs sees 15% upside for DAX by year-end',
+        'FTSE 100 finally breaking out — UK defense stocks leading',
         'Dark pool flow showing massive accumulation in NVDA',
-        'COT Report shows commercials accumulating shorts on oil',
-        'Fed might cut rates in June — impact on precious metals',
-        'Warren Buffett increased cash position — topping signal?',
-        'Gold ETF with largest inflow in 3 years — detailed data',
-        'BTC and Gold correlated: both are hedges against fiat',
-        'Analysis: why the dollar will weaken and gold will hit $3500',
-        'Middle East sovereign funds diversifying into tech equities',
+        'Nikkei 225 trapped in a range — BOJ policy keeping lid on',
+        'Russell 2000 rotation is real — small caps outperforming',
+        'Warren Buffett increased Berkshire cash to record — topping signal?',
+        'Fed might cut rates in June — impact on tech stocks',
+        'CAC 40 outperforming expectations — European defense rotation',
+        'Hang Seng rallying — China stimulus finally working',
+        'Bridgewater\'s latest 13F shows massive gold accumulation',
+        'Analysis: why Dollar will weaken and help EM equities',
+        'Options flow screaming bullish on banks — JPM, GS, BAC',
     ];
     return {
         title: randEl(titles), subreddit: randEl(SUBREDDITS), upvotes: randInt(50, 5000),
         comments: randInt(20, 800), sentiment: randEl(['positive', 'negative', 'neutral']),
         sentimentScore: rand(-1, 1), time: Date.now() - randInt(0, 86400000),
-        author: 'u/' + randEl(['GoldBull2026', 'SmartMoneyTracker', 'OilAnalyst', 'WallStreetInsider', 'CommoditiesKing', 'IndexTraderPro', 'MacroResearcher']),
+        author: 'u/' + randEl(['SmartMoneyTracker', 'IndexTraderPro', 'MacroResearcher', 'WallStreetInsider', 'EquityAnalyst', '13FHunter', 'DAXTrader', 'GlobalMacro']),
     };
 }
 
 // ===================== STATE =====================
 const state = {
-    currentSection: 'whale-alerts',
-    alerts: [],
-    alertsPaused: false,
-    trackedWallets: [],
+    currentTab: 'home',
+    alerts: [], alertsPaused: false,
+    filings: [],
+    trackedInstitutions: [],
     tokens: JSON.parse(JSON.stringify(TOKENS)),
     posts: [],
     fearGreedIndex: randInt(25, 85),
-    sidebarCollapsed: false,
+    notifications: [],
+    selectedRegion: 'all',
 };
 
 // ===================== INITIALIZATION =====================
 document.addEventListener('DOMContentLoaded', () => {
-    // Pre-generate data
     for (let i = 0; i < 25; i++) state.alerts.push(generateWhaleAlert());
     state.alerts.sort((a, b) => b.time - a.time);
+    for (let i = 0; i < 20; i++) state.filings.push(generateFiling());
+    state.filings.sort((a, b) => new Date(b.date) - new Date(a.date));
     for (let i = 0; i < 15; i++) state.posts.push(generateRedditPost());
 
     setTimeout(() => {
@@ -620,66 +533,159 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initApp() {
-    setupNavigation();
-    setupSearch();
-    setupSidebar();
-    setupSettings();
+    setupTabs(); setupDrawer(); setupNotifications(); setupSearch();
+    setupSettings(); setupRegionTabs(); setupInstitutionalTracker();
     renderDataSources();
 
-    // First live sync
-    showToast('🔄', 'Connecting to data sources...', 'whale');
+    showToast('🔄', 'Connecting to global data sources...', 'whale');
     const updated = await LiveData.syncAll();
-    if (updated > 0) {
-        showToast('✅', `${updated} assets updated with live prices!`, 'bull');
-    } else {
-        showToast('ℹ️', 'Demo mode active. Configure API keys in Settings.', 'alert');
-    }
+    if (updated > 0) showToast('✅', `${updated} assets updated with live prices!`, 'bull');
+    else showToast('ℹ️', 'Demo mode active. Configure API keys in Settings.', 'alert');
 
-    updateTickers();
-    renderWhaleAlerts();
-    renderLeaderboard();
-    renderMarketOverview();
-    renderVolumeScanner();
-    renderCohortAnalysis();
-    renderCommunityIntel();
-    updateAlertStats();
+    updateTickers(); renderWhaleAlerts(); renderLeaderboard();
+    renderMarketOverview(); renderVolumeScanner();
+    renderCohortAnalysis(); renderCommunityIntel();
+    renderFilingMonitor(); updateAlertStats();
+    renderHome(); // Must be after alerts/leaderboard are populated
     startLiveUpdates();
     document.getElementById('last-update').textContent = 'Last update: now';
 }
 
-// ===================== NAVIGATION =====================
-function setupNavigation() {
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const section = item.dataset.section;
-            if (section) navigateTo(section);
-        });
+// ===================== TAB NAVIGATION =====================
+function setupTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => setTab(btn.dataset.tab));
     });
-    const hash = location.hash.slice(1);
-    if (hash) navigateTo(hash);
-}
-
-function navigateTo(section) {
-    state.currentSection = section;
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    const navItem = document.querySelector(`[data-section="${section}"]`);
-    const sectionEl = document.getElementById('section-' + section);
-    if (navItem) navItem.classList.add('active');
-    if (sectionEl) sectionEl.classList.add('active');
-    location.hash = section;
-    document.getElementById('sidebar').classList.remove('mobile-open');
-}
-
-// ===================== SIDEBAR =====================
-function setupSidebar() {
-    document.getElementById('sidebar-toggle').addEventListener('click', () => {
-        const sidebar = document.getElementById('sidebar');
-        if (window.innerWidth <= 768) { sidebar.classList.toggle('mobile-open'); }
-        else { sidebar.classList.toggle('collapsed'); }
+    document.querySelectorAll('.drawer-item[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => { setTab(btn.dataset.tab); closeDrawer(); });
     });
 }
+
+function setTab(tab) {
+    state.currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-screen').forEach(s => s.classList.remove('active'));
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    const screen = document.getElementById('tab-' + tab);
+    if (btn) btn.classList.add('active');
+    if (screen) screen.classList.add('active');
+    // Scroll to top of content
+    const main = document.getElementById('main-content');
+    if (main) main.scrollTop = 0;
+}
+window.setTab = setTab;
+
+// ===================== DRAWER =====================
+function setupDrawer() {
+    const toggle = document.getElementById('sidebar-toggle');
+    const overlay = document.getElementById('drawer-overlay');
+    const close = document.getElementById('drawer-close');
+    toggle.addEventListener('click', () => overlay.classList.add('open'));
+    close.addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDrawer(); });
+}
+function closeDrawer() { document.getElementById('drawer-overlay').classList.remove('open'); }
+window.closeDrawer = closeDrawer;
+
+// ===================== NOTIFICATIONS =====================
+function setupNotifications() {
+    const bell = document.getElementById('notif-bell');
+    const panel = document.getElementById('notif-panel');
+    bell.addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('open'); });
+    document.addEventListener('click', (e) => { if (!panel.contains(e.target) && e.target !== bell) panel.classList.remove('open'); });
+    document.getElementById('notif-mark-read')?.addEventListener('click', () => {
+        state.notifications = [];
+        renderNotifications();
+        bell.querySelector('.notif-dot').style.display = 'none';
+    });
+}
+function addNotification(icon, text) {
+    state.notifications.unshift({ icon, text, time: Date.now() });
+    if (state.notifications.length > 20) state.notifications.pop();
+    renderNotifications();
+    const dot = document.querySelector('.notif-dot');
+    if (dot) dot.style.display = 'block';
+}
+function renderNotifications() {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+    if (state.notifications.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:0.78rem">No notifications</div>';
+        return;
+    }
+    list.innerHTML = state.notifications.slice(0, 15).map(n =>
+        `<div class="notif-item"><span class="ni-icon">${n.icon}</span><span class="ni-text">${n.text}</span><span class="ni-time">${timeAgo(Date.now() - n.time)}</span></div>`
+    ).join('');
+}
+
+// ===================== HOME SCREEN =====================
+function renderHome() {
+    renderHomeKPIs();
+    renderPodium();
+    renderCarousel();
+}
+function renderHomeKPIs() {
+    const el = id => document.getElementById(id);
+    el('kpi-txns').textContent = state.alerts.length;
+    const totalVol = state.alerts.reduce((s, a) => s + a.amount, 0);
+    el('kpi-vol').textContent = formatUSD(totalVol);
+    const unique = new Set(state.alerts.map(a => a.whaleName));
+    el('kpi-whales').textContent = unique.size;
+    const fng = state.fearGreedIndex;
+    const fngLabel = fng <= 25 ? 'Extreme Fear' : fng <= 45 ? 'Fear' : fng <= 55 ? 'Neutral' : fng <= 75 ? 'Greed' : 'Extreme Greed';
+    el('kpi-fng').textContent = fng + ' ' + fngLabel;
+}
+function renderPodium() {
+    const sorted = [...LEADERBOARD_ENTITIES].sort((a, b) => b.pnl90d - a.pnl90d);
+    const top3 = sorted.slice(0, 3);
+    const rest = sorted.slice(3, 8);
+    const medals = ['🥇', '🥈', '🥉'];
+    const classes = ['gold', 'silver', 'bronze'];
+    const podium = document.getElementById('podium');
+    // Order: silver(#2), gold(#1), bronze(#3)
+    const order = [1, 0, 2];
+    podium.innerHTML = order.map(i => {
+        const e = top3[i];
+        if (!e) return '';
+        const pnlColor = e.pnl90d >= 0 ? 'positive-text' : 'negative-text';
+        return `<div class="podium-slot ${classes[i]}">
+            <div class="podium-medal">${medals[i]}</div>
+            <div class="podium-name">${e.name}</div>
+            <div class="podium-pnl ${pnlColor}">${e.pnl90d >= 0 ? '+' : ''}${e.pnl90d}%</div>
+            <div class="podium-aum">${formatUSD(e.aum)}</div>
+        </div>`;
+    }).join('');
+    const rankedList = document.getElementById('ranked-list');
+    rankedList.innerHTML = rest.map((e, i) => {
+        const pnlColor = e.pnl90d >= 0 ? 'positive-text' : 'negative-text';
+        return `<div class="ranked-item">
+            <span class="ri-rank">${i + 4}</span>
+            <span class="ri-icon">${e.icon}</span>
+            <span class="ri-name">${e.name}</span>
+            <span class="ri-pnl ${pnlColor}">${e.pnl90d >= 0 ? '+' : ''}${e.pnl90d}%</span>
+        </div>`;
+    }).join('');
+}
+function renderCarousel() {
+    const track = document.getElementById('carousel-track');
+    const featured = state.alerts.slice(0, 6);
+    const typeClass = { buy: 'cc-buy', sell: 'cc-sell', hedge: 'cc-hedge', position: 'cc-position' };
+    track.innerHTML = featured.map(a => {
+        const cls = typeClass[a.type] || 'cc-position';
+        return `<div class="carousel-card ${cls}">
+            <div class="cc-type">${a.type.toUpperCase()} SIGNAL</div>
+            <div class="cc-entity">${a.whaleName}</div>
+            <div class="cc-asset">${a.tokenName} (${a.token})</div>
+            <div class="cc-amount">${formatUSD(a.amount)}</div>
+            <span class="cc-cta">View Details →</span>
+        </div>`;
+    }).join('');
+}
+function trackFromHome() {
+    const v = document.getElementById('home-track-input').value.trim();
+    if (v) { setTab('wallets'); trackInstitution(v); }
+}
+window.trackFromHome = trackFromHome;
 
 // ===================== SEARCH =====================
 function setupSearch() {
@@ -696,679 +702,581 @@ function setupSearch() {
 }
 
 function renderSearchResults(query) {
-    const container = document.getElementById('search-results');
-    if (!query) {
-        container.innerHTML = `<div style="padding:18px;color:var(--text-faint);font-size:0.82rem;">Type to search assets, sections or topics...</div>`;
-        return;
-    }
+    const c = document.getElementById('search-results');
+    if (!query) { c.innerHTML = '<div style="padding:18px;color:var(--text-faint);font-size:0.82rem;">Type to search stocks, indices, institutions...</div>'; return; }
     const q = query.toLowerCase();
     const matches = state.tokens.filter(t => t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)).slice(0, 8);
     let html = '';
     matches.forEach(t => {
         const cc = t.change24h >= 0 ? 'positive-text' : 'negative-text';
-        const liveTag = t._live ? ' 🟢' : '';
-        html += `<div class="search-result-item" onclick="navigateTo('market-overview');document.getElementById('search-modal').classList.add('hidden')">
+        const live = t._live ? ' 🟢' : '';
+        const regionTag = { us: '🇺🇸', eu: '🇪🇺', asia: '🌏', global: '🌍' }[t.region] || '';
+        html += `<div class="search-result-item" onclick="navigateTo('global-markets');document.getElementById('search-modal').classList.add('hidden')">
             <span class="result-icon">${t.icon || '💰'}</span>
-            <div class="result-info"><div class="result-name">${t.symbol}${liveTag}</div><div class="result-meta">${t.name} • ${formatUSD(t.price)} • ${t.assetClass}</div></div>
+            <div class="result-info"><div class="result-name">${t.symbol}${live} ${regionTag}</div><div class="result-meta">${t.name} • ${formatUSD(t.price)} • ${t.assetClass}</div></div>
             <span class="${cc}" style="font-family:var(--font-mono);font-size:0.78rem">${t.change24h >= 0 ? '+' : ''}${t.change24h.toFixed(2)}%</span>
         </div>`;
     });
-    container.innerHTML = html || `<div style="padding:18px;color:var(--text-faint);font-size:0.82rem;">No results for "${query}"</div>`;
+    c.innerHTML = html || `<div style="padding:18px;color:var(--text-faint);font-size:0.82rem;">No results for "${query}"</div>`;
+}
+
+// ===================== REGION TABS =====================
+function setupRegionTabs() {
+    document.querySelectorAll('.region-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.region-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            state.selectedRegion = tab.dataset.region;
+            renderMarketOverview();
+        });
+    });
 }
 
 // ===================== TICKERS =====================
 function updateTickers() {
-    const gold = state.tokens.find(t => t.symbol === 'XAU/USD');
-    const oil = state.tokens.find(t => t.symbol === 'WTI');
-    const btc = state.tokens.find(t => t.symbol === 'BTC/USD');
-    const sp = state.tokens.find(t => t.symbol === 'US500');
-    setTicker('gold', gold); setTicker('oil', oil); setTicker('btc', btc); setTicker('us500', sp);
-
+    const find = sym => state.tokens.find(t => t.symbol === sym);
+    setTicker('sp500', find('US500')); setTicker('nasdaq', find('US100'));
+    setTicker('dow', find('US30')); setTicker('dax', find('DAX'));
+    setTicker('ftse', find('FTSE')); setTicker('nikkei', find('NI225'));
     const fng = state.fearGreedIndex;
-    document.getElementById('fng-value').textContent = fng;
+    const fngVal = document.getElementById('fng-value');
+    if (fngVal) fngVal.textContent = fng;
     const fngLabel = document.getElementById('fng-label');
     const label = fng <= 25 ? 'Extreme Fear' : fng <= 45 ? 'Fear' : fng <= 55 ? 'Neutral' : fng <= 75 ? 'Greed' : 'Extreme Greed';
-    fngLabel.textContent = label;
-    fngLabel.className = 'ticker-change ' + (fng >= 50 ? 'positive' : 'negative');
+    if (fngLabel) { fngLabel.textContent = label; fngLabel.className = 'ticker-change ' + (fng >= 50 ? 'positive' : 'negative'); }
+    // Mobile ticker
+    setMobileTicker('sp500', find('US500')); setMobileTicker('nasdaq', find('US100'));
+    setMobileTicker('dow', find('US30')); setMobileTicker('dax', find('DAX'));
+    setMobileTicker('nikkei', find('NI225'));
+    const mtFng = document.getElementById('mt-fng');
+    const mtFngC = document.getElementById('mt-fng-c');
+    if (mtFng) mtFng.textContent = fng;
+    if (mtFngC) { mtFngC.textContent = label; mtFngC.className = 'mt-change ' + (fng >= 50 ? 'ticker-change positive' : 'ticker-change negative'); }
 }
 
 function setTicker(id, token) {
-    document.getElementById('price-' + id).textContent = formatUSD(token.price);
-    const changeEl = document.getElementById('change-' + id);
-    changeEl.textContent = (token.change24h >= 0 ? '+' : '') + token.change24h.toFixed(2) + '%';
-    changeEl.className = 'ticker-change ' + (token.change24h >= 0 ? 'positive' : 'negative');
+    if (!token) return;
+    const priceEl = document.getElementById('price-' + id);
+    if (priceEl) priceEl.textContent = formatUSD(token.price);
+    const el = document.getElementById('change-' + id);
+    if (el) {
+        el.textContent = (token.change24h >= 0 ? '+' : '') + token.change24h.toFixed(2) + '%';
+        el.className = 'ticker-change ' + (token.change24h >= 0 ? 'positive' : 'negative');
+    }
+}
+function setMobileTicker(id, token) {
+    if (!token) return;
+    const priceEl = document.getElementById('mt-' + id);
+    if (priceEl) priceEl.textContent = formatUSD(token.price);
+    const changeEl = document.getElementById('mt-' + id + '-c');
+    if (changeEl) {
+        changeEl.textContent = (token.change24h >= 0 ? '+' : '') + token.change24h.toFixed(2) + '%';
+        changeEl.className = 'mt-change ticker-change ' + (token.change24h >= 0 ? 'positive' : 'negative');
+    }
+}
+
+// ===================== TOAST =====================
+function showToast(icon, msg, type = 'whale') {
+    const tc = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.innerHTML = `<span style="font-size:16px">${icon}</span><span>${msg}</span>`;
+    tc.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 4000);
 }
 
 // ===================== WHALE ALERTS =====================
-function getScoreColor(score) {
-    if (score >= 80) return 'var(--accent-bull)';
-    if (score >= 60) return 'var(--accent-info)';
-    if (score >= 40) return 'var(--accent-warn)';
-    return 'var(--accent-bear)';
-}
-
-function getScoreLabel(score) {
-    if (score >= 80) return 'Very High';
-    if (score >= 60) return 'High';
-    if (score >= 40) return 'Moderate';
-    return 'Low';
-}
+function getScoreColor(s) { return s >= 80 ? 'var(--accent-bull)' : s >= 60 ? 'var(--accent-info)' : s >= 40 ? 'var(--accent-warn)' : 'var(--accent-bear)'; }
+function getScoreLabel(s) { return s >= 80 ? 'Very High' : s >= 60 ? 'High' : s >= 40 ? 'Moderate' : 'Low'; }
 
 function renderAlertHTML(a) {
-    const mktLabel = { commodities: '🥇 COMMODITY', indices: '📊 INDEX', equities: '📈 EQUITY', crypto: '₿ CRYPTO' }[a.market] || a.market;
-    const isInst = a.market !== 'crypto';
-    const profile = a.profile || {};
-    const filing = a.filing || {};
+    const mktLabel = { indices: '📊 INDEX', equities: '📈 EQUITY' }[a.market] || a.market;
+    const isInst = true;
     const sms = a.smartMoneyScore || randInt(30, 80);
     const smsColor = getScoreColor(sms);
-    const smsLabel = getScoreLabel(sms);
-
-    const sourceLink = a.sourceUrl
-        ? `<a href="${a.sourceUrl}" target="_blank" rel="noopener" class="alert-source-link" title="Verify on ${a.sourceName}">${a.sourceIcon || '🔗'} ${a.sourceName}</a>`
-        : '';
-    
-    // Filing badge
+    const filing = a.filing || {};
+    const regionFlag = { us: '🇺🇸', eu: '🇪🇺', asia: '🌏', global: '🌍' }[a.region] || '';
+    const regBadge = filing.regulator ? `<span class="regulator-badge ${filing.regulator}">${{ sec:'SEC', bafin:'BaFin', amf:'AMF', fca:'FCA', edinet:'EDINET', hkex:'HKEX' }[filing.regulator] || ''}</span>` : '';
+    const sourceLink = a.sourceUrl ? `<a href="${a.sourceUrl}" target="_blank" rel="noopener" class="alert-source-link">${a.sourceIcon || '🔗'} ${a.sourceName}</a>` : '';
     const filingBadge = filing.type ? `<span class="filing-badge">${filing.type}</span>` : '';
-    
-    // CIK link
-    const cikLink = filing.cik
-        ? `<a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${filing.cik}&type=13F&dateb=&owner=include&count=10" target="_blank" rel="noopener" class="cik-link" title="SEC EDGAR Filings">🔗 CIK: ${filing.cik}</a>`
-        : '';
-
-    // Shares/contracts info
-    const sharesInfo = filing.shares
-        ? `${filing.shares.toLocaleString()} shares/contracts`
-        : filing.blockNumber
-        ? `Block #${filing.blockNumber.toLocaleString()} • ${filing.confirmations} confirmations`
-        : '';
-
-    // Filing line
-    const filingLine = filing.type
-        ? `<div class="alert-filing-line">📋 ${filing.type} • Filing: ${filing.date} ${cikLink} ${sharesInfo}</div>`
-        : '';
-
-    // Convergence signals
-    const signalsHTML = (a.convergenceSignals || []).map(s => {
-        const sentClass = s.sentiment === 'bullish' ? 'signal-bullish' : s.sentiment === 'bearish' ? 'signal-bearish' : 'signal-neutral';
-        return `<span class="convergence-chip ${sentClass}" title="${s.detail}">${s.icon} ${s.label}</span>`;
-    }).join('');
-
-    const actionDesc = a.actionLabel || (isInst ? a.type.toUpperCase() + ' → ' + a.to : shortAddr(a.from) + ' → ' + shortAddr(a.to));
+    const cikLink = filing.cik ? `<a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${filing.cik}&type=13F&dateb=&owner=include&count=10" target="_blank" rel="noopener" class="cik-link">🔗 CIK: ${filing.cik}</a>` : '';
+    const sharesInfo = filing.shares ? `${filing.shares.toLocaleString()} shares` : filing.blockNumber ? `Block #${filing.blockNumber.toLocaleString()}` : '';
+    const filingLine = filing.type ? `<div class="alert-filing-line">📋 ${filing.type} • ${filing.date} ${regBadge} ${cikLink} ${sharesInfo}</div>` : '';
+    const signalsHTML = (a.convergenceSignals || []).map(s => `<span class="convergence-chip ${s.sentiment === 'bullish' ? 'signal-bullish' : s.sentiment === 'bearish' ? 'signal-bearish' : 'signal-neutral'}" title="${s.detail}">${s.icon} ${s.label}</span>`).join('');
     const typeIcon = { buy: '🟢', sell: '🔴', position: '🔵', hedge: '🟠' }[a.type] || '⚪';
 
     return `<div class="alert-item" data-chain="${a.market}" data-impact="${a.impact}" data-id="${a.id}" onclick="toggleAlertExpand(this)">
         <div class="alert-main-row">
-            <div class="alert-impact">${a.impact === 'high' ? '🔴' : a.impact === 'medium' ? '🟡' : '🟢'}</div>
+            <div class="alert-type-icon">${typeIcon}</div>
             <div class="alert-info">
-                <div class="alert-title">
-                    <span class="amount">${formatUSD(a.amount)}</span> <span class="alert-token">${a.token}</span>
-                    <span class="alert-chain-tag ${a.market}">${mktLabel}</span>
-                    ${filingBadge}
-                    ${sourceLink}
+                <div class="alert-title">${a.tokenName} (${a.token}) ${regionFlag} <span style="font-size:0.65rem;color:var(--text-faint)">${mktLabel}</span> ${filingBadge}</div>
+                <div class="alert-meta">
+                    <span>${isInst ? a.whaleName : shortAddr(a.from)}</span>
+                    <span>→ ${isInst ? a.type.charAt(0).toUpperCase() + a.type.slice(1) : shortAddr(a.to)}</span>
+                    <span>${sourceLink}</span>
                 </div>
-                <div class="alert-entity-line">
-                    <span class="entity-icon">${profile.icon || '🐋'}</span>
-                    <span class="entity-name">${a.whaleName}</span>
-                    <span class="entity-aum">AUM: ${formatUSD(profile.aum || 0)}</span>
-                </div>
-                <div class="alert-detail">
-                    <span class="entity-ceo">👤 ${profile.ceo || 'Unknown'}</span>
-                    <span class="alert-action">${a.type.toUpperCase()} → ${isInst ? (a.to || 'Rebalancing') : shortAddr(a.to || '')}</span>
-                </div>
-                ${filingLine}
             </div>
-            <div class="alert-right">
+            <div style="text-align:right">
+                <div class="alert-amount">${formatUSD(a.amount)}</div>
                 <div class="alert-time">${timeAgo(Date.now() - a.time)}</div>
-                <span class="alert-type-tag ${a.type}">${a.type}</span>
-                <div class="sms-mini" title="Smart Money Score: ${sms}/100 — ${smsLabel}">
-                    <span class="sms-value" style="color:${smsColor}">⚡ ${sms}</span>
-                    <div class="sms-bar-mini"><div class="sms-bar-fill-mini" style="width:${sms}%;background:${smsColor}"></div></div>
-                </div>
-                <span class="expand-arrow">▼</span>
             </div>
         </div>
-        <div class="alert-expandable">
-            <div class="alert-expand-content">
-                <div class="insight-panel">
-                    <div class="insight-header">💡 Smart Money Insight</div>
-                    <p class="insight-text">${a.insight || ''}</p>
-                </div>
-                <div class="alert-expand-grid">
-                    <div class="expand-section">
-                        <div class="expand-section-title">Entity Profile</div>
-                        <div class="profile-details">
-                            <div class="profile-row"><span class="pf-label">CEO/Manager</span><span class="pf-value">${profile.ceo || 'N/A'}</span></div>
-                            <div class="profile-row"><span class="pf-label">AUM</span><span class="pf-value">${formatUSD(profile.aum || 0)}</span></div>
-                            <div class="profile-row"><span class="pf-label">Strategy</span><span class="pf-value">${profile.strategy || 'N/A'}</span></div>
-                            <div class="profile-row"><span class="pf-label">Headquarters</span><span class="pf-value">${profile.hq || 'N/A'}</span></div>
-                            <div class="profile-row"><span class="pf-label">Sector</span><span class="pf-value">${profile.sector || 'N/A'}</span></div>
-                            <div class="profile-row"><span class="pf-label">Founded</span><span class="pf-value">${profile.founded || 'N/A'}</span></div>
-                        </div>
-                    </div>
-                    <div class="expand-section">
-                        <div class="expand-section-title">Track Record (90d)</div>
-                        <div class="profile-details">
-                            <div class="profile-row"><span class="pf-label">Win Rate</span><span class="pf-value ${(profile.track?.win || 0) >= 60 ? 'positive-text' : 'negative-text'}">${profile.track?.win || 0}%</span></div>
-                            <div class="profile-row"><span class="pf-label">P&L (90d)</span><span class="pf-value ${(profile.track?.avg90d || 0) >= 0 ? 'positive-text' : 'negative-text'}">${(profile.track?.avg90d || 0) >= 0 ? '+' : ''}${profile.track?.avg90d || 0}%</span></div>
-                            <div class="profile-row"><span class="pf-label">Total Trades</span><span class="pf-value">${(profile.track?.trades || 0).toLocaleString()}</span></div>
-                            <div class="profile-row"><span class="pf-label">Reputation</span><span class="pf-value">${profile.reputation || 0}/100</span></div>
-                        </div>
-                    </div>
-                    <div class="expand-section">
-                        <div class="expand-section-title">Smart Money Score Breakdown</div>
-                        <div class="sms-breakdown">
-                            <div class="sms-component"><span>Reputation</span><div class="sms-comp-bar"><div style="width:${(a.smsComponents?.reputation || 0) * 4}%;background:var(--accent-primary)"></div></div><span>${a.smsComponents?.reputation || 0}/25</span></div>
-                            <div class="sms-component"><span>Track Record</span><div class="sms-comp-bar"><div style="width:${(a.smsComponents?.trackRecord || 0) * 4}%;background:var(--accent-bull)"></div></div><span>${a.smsComponents?.trackRecord || 0}/25</span></div>
-                            <div class="sms-component"><span>Conviction</span><div class="sms-comp-bar"><div style="width:${(a.smsComponents?.conviction || 0) * 5}%;background:var(--accent-warn)"></div></div><span>${a.smsComponents?.conviction || 0}/20</span></div>
-                            <div class="sms-component"><span>Timing</span><div class="sms-comp-bar"><div style="width:${((a.smsComponents?.timing || 0) / 15) * 100}%;background:var(--accent-info)"></div></div><span>${a.smsComponents?.timing || 0}/15</span></div>
-                            <div class="sms-component"><span>Diversification</span><div class="sms-comp-bar"><div style="width:${((a.smsComponents?.diversification || 0) / 15) * 100}%;background:var(--accent-cyan)"></div></div><span>${a.smsComponents?.diversification || 0}/15</span></div>
-                        </div>
-                        <div class="sms-total">Total Score: <strong style="color:${smsColor};font-size:1.2rem">${sms}</strong>/100 <span class="sms-label-tag" style="background:${smsColor}22;color:${smsColor}">${smsLabel}</span></div>
-                    </div>
-                </div>
-                ${signalsHTML ? `<div class="convergence-row"><span class="convergence-title">🔄 Convergence Signals:</span>${signalsHTML}</div>` : ''}
-                <div class="alert-action-row">
-                    ${typeIcon} <span class="action-description">${actionDesc}</span>
-                </div>
+        <div class="alert-expand">
+            <div class="alert-insight">💡 ${a.insight}</div>
+            ${filingLine}
+            <div class="alert-detail-grid">
+                <div class="alert-detail-card"><h4>🧠 Smart Money Score</h4><div class="detail-value" style="color:${smsColor}">${sms}/100 — ${getScoreLabel(sms)}</div><div class="sms-bar"><div class="sms-bar-fill" style="width:${sms}%;background:${smsColor}"></div></div></div>
+                <div class="alert-detail-card"><h4>🏛️ Entity Profile</h4><p><strong>${a.whaleName}</strong><br>${a.profile?.sector || ''} • ${a.profile?.hq || ''}<br>AUM: ${formatUSD(a.profile?.aum || 0)}</p></div>
+                <div class="alert-detail-card"><h4>📊 Track Record</h4><p>Win Rate: ${a.profile?.track?.win || '—'}%<br>90d P&L: ${a.profile?.track?.avg90d > 0 ? '+' : ''}${a.profile?.track?.avg90d || '—'}%<br>Total Trades: ${(a.profile?.track?.trades || 0).toLocaleString()}</p></div>
             </div>
+            ${signalsHTML ? '<div class="convergence-signals">' + signalsHTML + '</div>' : ''}
         </div>
     </div>`;
 }
 
-function toggleAlertExpand(el) {
-    el.classList.toggle('expanded');
-}
+function toggleAlertExpand(el) { el.classList.toggle('expanded'); }
 
 function renderWhaleAlerts() {
     const feed = document.getElementById('alert-feed');
-    feed.innerHTML = state.alerts.map(a => renderAlertHTML(a)).join('');
-    document.getElementById('alert-count').textContent = state.alerts.length;
-    document.getElementById('alert-chain-filter').onchange = document.getElementById('alert-impact-filter').onchange = filterAlerts;
-    document.getElementById('alert-pause').onclick = () => {
-        state.alertsPaused = !state.alertsPaused;
-        document.getElementById('alert-pause').classList.toggle('active', state.alertsPaused);
-    };
-}
-
-function filterAlerts() {
-    const chain = document.getElementById('alert-chain-filter').value;
-    const impact = document.getElementById('alert-impact-filter').value;
-    document.querySelectorAll('.alert-item').forEach(item => {
-        const mc = chain === 'all' || item.dataset.chain === chain;
-        const mi = impact === 'all' || item.dataset.impact === impact;
-        item.style.display = mc && mi ? '' : 'none';
-    });
+    const chainF = document.getElementById('alert-chain-filter').value;
+    const impactF = document.getElementById('alert-impact-filter').value;
+    const regionF = document.getElementById('alert-region-filter').value;
+    let filtered = state.alerts;
+    if (chainF !== 'all') filtered = filtered.filter(a => a.market === chainF);
+    if (impactF !== 'all') filtered = filtered.filter(a => a.impact === impactF);
+    if (regionF !== 'all') filtered = filtered.filter(a => a.region === regionF || a.region === 'global');
+    feed.innerHTML = filtered.slice(0, 30).map(a => renderAlertHTML(a)).join('');
+    const alertCountEl = document.getElementById('tab-alert-count');
+    if (alertCountEl) alertCountEl.textContent = state.alerts.length;
 }
 
 function updateAlertStats() {
-    const last24h = state.alerts.filter(a => Date.now() - a.time < 86400000);
-    document.getElementById('stat-total-txns').textContent = last24h.length;
-    document.getElementById('stat-volume-moved').textContent = formatUSD(last24h.reduce((s, a) => s + a.amount, 0));
-    document.getElementById('stat-largest-txn').textContent = formatUSD(Math.max(...last24h.map(a => a.amount), 0));
-    document.getElementById('stat-active-whales').textContent = new Set(last24h.map(a => a.whaleName)).size;
+    document.getElementById('stat-total-txns').textContent = state.alerts.length;
+    const totalVol = state.alerts.reduce((s, a) => s + a.amount, 0);
+    document.getElementById('stat-volume-moved').textContent = formatUSD(totalVol);
+    const largest = Math.max(...state.alerts.map(a => a.amount));
+    document.getElementById('stat-largest-txn').textContent = formatUSD(largest);
+    const unique = new Set(state.alerts.map(a => a.whaleName));
+    document.getElementById('stat-active-whales').textContent = unique.size;
+    // Update tab badge
+    const tabBadge = document.getElementById('tab-alert-count');
+    if (tabBadge) tabBadge.textContent = state.alerts.length;
 }
 
 // ===================== LEADERBOARD =====================
 function renderLeaderboard() {
-    const sortBy = document.getElementById('leaderboard-sort')?.value || 'pnl';
-    const filterType = document.getElementById('leaderboard-filter')?.value || 'all';
-
-    let entities = [...LEADERBOARD_ENTITIES];
-
-    // Filter
-    if (filterType !== 'all') {
-        entities = entities.filter(e => e.type === filterType);
-    }
-
-    // Sort
-    const sortMap = {
-        pnl: (a, b) => b.pnl90d - a.pnl90d,
-        winrate: (a, b) => b.winRate - a.winRate,
-        volume: (a, b) => b.totalVol - a.totalVol,
-        reputation: (a, b) => b.aum - a.aum,
-    };
-    entities.sort(sortMap[sortBy] || sortMap.pnl);
-
+    const sort = document.getElementById('leaderboard-sort').value;
+    const filter = document.getElementById('leaderboard-filter').value;
+    let data = [...LEADERBOARD_ENTITIES];
+    if (filter !== 'all') data = data.filter(e => e.type === filter);
+    data.sort((a, b) => {
+        if (sort === 'pnl') return b.pnl90d - a.pnl90d;
+        if (sort === 'winrate') return b.winRate - a.winRate;
+        if (sort === 'volume') return b.totalVol - a.totalVol;
+        return b.aum - a.aum;
+    });
     const body = document.getElementById('leaderboard-body');
-    if (!body) return;
-
-    body.innerHTML = entities.map((e, i) => {
-        const rank = i + 1;
-        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-        const top3Class = rank <= 3 ? 'lb-top3' : '';
-        const pnlClass = e.pnl90d >= 0 ? 'positive-text' : 'negative-text';
-        const pnlSign = e.pnl90d >= 0 ? '+' : '';
-
-        return `<div class="lb-row ${top3Class}">
-            <div class="lb-rank"><span class="rank-medal">${medal}</span></div>
-            <div class="lb-entity">
-                <span class="lb-icon">${e.icon}</span>
-                <div class="lb-entity-info">
-                    <div class="lb-name">${e.name}</div>
-                    <div class="lb-strategy">${e.strategy}</div>
-                </div>
-            </div>
+    body.innerHTML = data.map((e, i) => {
+        const pnlColor = e.pnl90d >= 0 ? 'positive-text' : 'negative-text';
+        return `<div class="lb-row">
+            <div class="lb-rank">${i + 1}</div>
+            <div class="lb-entity"><span class="lb-entity-icon">${e.icon}</span><div class="lb-entity-info"><div class="lb-entity-name">${e.name}</div><div class="lb-entity-strategy">${e.strategy}</div></div></div>
             <div class="lb-stat">${formatUSD(e.aum)}</div>
-            <div class="lb-stat">${e.winRate > 0 ? e.winRate + '%' : '—'}</div>
-            <div class="lb-stat ${pnlClass}">${e.pnl90d !== 0 ? pnlSign + e.pnl90d.toFixed(1) + '%' : '—'}</div>
+            <div class="lb-stat">${e.winRate}%</div>
+            <div class="lb-stat ${pnlColor}">${e.pnl90d >= 0 ? '+' : ''}${e.pnl90d}%</div>
             <div class="lb-stat">${formatUSD(e.totalVol)}</div>
             <div class="lb-stat">${e.txCount.toLocaleString()}</div>
         </div>`;
     }).join('');
 }
 
-// ===================== MARKET OVERVIEW =====================
+// ===================== GLOBAL MARKETS =====================
 function renderMarketOverview() {
-    renderHeatmap(); renderMarketTable(); setupMarketToggle();
-    const gold = state.tokens.find(t => t.symbol === 'XAU/USD');
-    const oil = state.tokens.find(t => t.symbol === 'WTI');
-    const sp = state.tokens.find(t => t.symbol === 'US500');
-    const btc = state.tokens.find(t => t.symbol === 'BTC/USD');
-    document.getElementById('stat-gold-price').textContent = formatUSD(gold.price);
-    document.getElementById('stat-oil-price').textContent = formatUSD(oil.price);
-    document.getElementById('stat-sp500-price').textContent = formatUSD(sp.price);
-    document.getElementById('stat-btc-price').textContent = formatUSD(btc.price);
-}
+    const heatmap = document.getElementById('market-heatmap');
+    let filtered = state.tokens;
+    if (state.selectedRegion !== 'all') {
+        const regionMap = { americas: 'us', europe: 'eu', asia: 'asia' };
+        const r = regionMap[state.selectedRegion];
+        if (r) filtered = filtered.filter(t => t.region === r);
+    }
 
-function getHeatmapColor(change) {
-    if (change > 8) return 'rgba(16, 185, 129, 0.65)';
-    if (change > 5) return 'rgba(16, 185, 129, 0.45)';
-    if (change > 2) return 'rgba(16, 185, 129, 0.25)';
-    if (change > 0) return 'rgba(16, 185, 129, 0.12)';
-    if (change > -2) return 'rgba(239, 68, 68, 0.12)';
-    if (change > -5) return 'rgba(239, 68, 68, 0.25)';
-    if (change > -8) return 'rgba(239, 68, 68, 0.45)';
-    return 'rgba(239, 68, 68, 0.65)';
-}
-
-function renderHeatmap() {
-    document.getElementById('market-heatmap').innerHTML = state.tokens.map(t => {
-        const bg = getHeatmapColor(t.change24h);
-        const tc = Math.abs(t.change24h) > 5 ? 'white' : 'var(--text-primary)';
-        const liveIndicator = t._live ? '🟢 ' : '';
-        return `<div class="heatmap-cell" style="background:${bg};color:${tc}" title="${t.name} (${t.assetClass}): ${formatUSD(t.price)}${t._live ? ' [LIVE]' : ' [DEMO]'}">
-            <span class="cell-symbol">${liveIndicator}${t.icon || ''} ${t.symbol}</span>
-            <span class="cell-change">${t.change24h >= 0 ? '+' : ''}${t.change24h.toFixed(2)}%</span>
-            <span class="cell-price">${formatUSD(t.price)}</span>
+    heatmap.innerHTML = filtered.map(t => {
+        const c24 = t.change24h;
+        const intensity = Math.min(Math.abs(c24) / 5, 1);
+        const r = c24 >= 0 ? 16 : 239; const g = c24 >= 0 ? 185 : 68; const b = c24 >= 0 ? 129 : 68;
+        const bg = `rgba(${r},${g},${b},${0.08 + intensity * 0.25})`;
+        const regionFlag = { us: '🇺🇸', eu: '🇪🇺', asia: '🌏', global: '🌍' }[t.region] || '';
+        const live = t._live ? '<span class="cell-live">● LIVE</span>' : '';
+        return `<div class="heatmap-cell" style="background:${bg}" title="${t.name} — ${t.assetClass}">
+            <div><div class="cell-symbol">${t.icon} ${t.symbol}</div><div class="cell-name">${t.name}</div></div>
+            <div><span class="cell-price">${formatUSD(t.price)}</span> <span class="cell-change">${c24 >= 0 ? '+' : ''}${c24.toFixed(2)}%</span></div>
+            <span class="cell-region">${regionFlag}</span>
+            ${live}
         </div>`;
     }).join('');
+
+    // Update stat cards
+    const find = sym => state.tokens.find(t => t.symbol === sym);
+    const sp = find('US500'), nq = find('US100'), dx = find('DAX'), ni = find('NI225');
+    if (sp) document.getElementById('stat-sp500-price').textContent = formatUSD(sp.price);
+    if (nq) document.getElementById('stat-nasdaq-price').textContent = formatUSD(nq.price);
+    if (dx) document.getElementById('stat-dax-price').textContent = formatUSD(dx.price);
+    if (ni) document.getElementById('stat-nikkei-price').textContent = formatUSD(ni.price);
+
+    // View toggle
+    const toggle = document.getElementById('market-view-toggle');
+    if (toggle && !toggle._setup) {
+        toggle._setup = true;
+        toggle.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                toggle.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const v = btn.dataset.view;
+                document.getElementById('market-heatmap').classList.toggle('hidden', v !== 'heatmap');
+                document.getElementById('market-table-container').classList.toggle('hidden', v !== 'table');
+                if (v === 'table') renderMarketTable();
+            });
+        });
+    }
 }
 
 function renderMarketTable() {
-    document.getElementById('market-table-body').innerHTML = state.tokens.map((t, i) => {
-        const c24 = t.change24h >= 0 ? 'positive-text' : 'negative-text';
-        const c7d = t.change7d >= 0 ? 'positive-text' : 'negative-text';
-        const liveTag = t._live ? ' 🟢' : '';
+    const body = document.getElementById('market-table-body');
+    let sorted = [...state.tokens].sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
+    body.innerHTML = sorted.map((t, i) => {
+        const cc24 = t.change24h >= 0 ? 'positive-text' : 'negative-text';
+        const cc7 = t.change7d >= 0 ? 'positive-text' : 'negative-text';
+        const regionTag = { us: 'US', eu: 'EU', asia: 'ASIA', global: 'GLOBAL' }[t.region] || '';
+        const regionClass = { us: 'us', eu: 'eu', asia: 'asia', global: 'global' }[t.region] || '';
         return `<tr>
             <td>${i + 1}</td>
-            <td><div class="asset-cell"><span class="asset-symbol">${t.icon || ''} ${t.symbol}${liveTag}</span><span class="asset-name">${t.name}</span></div></td>
-            <td>${formatUSD(t.price)}</td>
-            <td class="${c24}">${t.change24h >= 0 ? '+' : ''}${t.change24h.toFixed(2)}%</td>
-            <td class="${c7d}">${t.change7d >= 0 ? '+' : ''}${t.change7d.toFixed(2)}%</td>
+            <td><span style="margin-right:6px">${t.icon}</span>${t.symbol} — ${t.name} ${t._live ? '🟢' : ''}</td>
+            <td style="font-family:var(--font-mono)">${formatUSD(t.price)}</td>
+            <td class="${cc24}" style="font-family:var(--font-mono)">${t.change24h >= 0 ? '+' : ''}${t.change24h.toFixed(2)}%</td>
+            <td class="${cc7}" style="font-family:var(--font-mono)">${t.change7d >= 0 ? '+' : ''}${t.change7d.toFixed(2)}%</td>
+            <td><span class="region-tag ${regionClass}">${regionTag}</span></td>
             <td>${t.assetClass}</td>
-            <td>${formatUSD(t._vol24h || (t.mcap > 0 ? t.mcap * rand(0.02, 0.08) : rand(1e8, 5e9)))}</td>
-            <td><canvas class="sparkline-canvas" data-idx="${i}"></canvas></td>
+            <td style="font-family:var(--font-mono)">${t._vol24h ? formatUSD(t._vol24h) : '—'}</td>
         </tr>`;
     }).join('');
-
-    document.querySelectorAll('.sparkline-canvas').forEach(canvas => {
-        const idx = parseInt(canvas.dataset.idx);
-        const data = generateSparkline(24, 100, 8);
-        const ctx = canvas.getContext('2d');
-        canvas.width = 80; canvas.height = 30;
-        const max = Math.max(...data), min = Math.min(...data);
-        ctx.strokeStyle = state.tokens[idx].change24h >= 0 ? '#10b981' : '#ef4444';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        data.forEach((v, j) => {
-            const x = (j / (data.length - 1)) * 80;
-            const y = 28 - ((v - min) / (max - min || 1)) * 26;
-            j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-    });
-}
-
-function setupMarketToggle() {
-    document.querySelectorAll('#market-view-toggle .view-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('#market-view-toggle .view-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const view = btn.dataset.view;
-            document.getElementById('market-heatmap').classList.toggle('hidden', view !== 'heatmap');
-            document.getElementById('market-table-container').classList.toggle('hidden', view !== 'table');
-        });
-    });
 }
 
 // ===================== VOLUME SCANNER =====================
 function renderVolumeScanner() {
     const grid = document.getElementById('volume-scanner-grid');
-    const volumeData = state.tokens.map(t => {
-        const spike = rand(0.5, 8);
-        const vol24h = t._vol24h || (t.mcap > 0 ? t.mcap * rand(0.02, 0.1) : rand(1e8, 5e9));
-        return { ...t, spike, vol24h, avg7d: vol24h / spike };
-    }).sort((a, b) => b.spike - a.spike);
+    const minSpike = parseFloat(document.getElementById('volume-min-spike')?.value || 1.5);
+    const scanData = state.tokens.filter(t => t.market === 'equities' || t.market === 'indices').map(t => {
+        const spike = rand(0.5, 6);
+        return { ...t, spike, avgVol: rand(1e8, 5e9), currentVol: rand(1e8, 5e9) * spike };
+    }).filter(d => d.spike >= minSpike).sort((a, b) => b.spike - a.spike).slice(0, 16);
 
-    grid.innerHTML = volumeData.map(v => {
-        const sc = v.spike >= 3 ? 'high' : v.spike >= 2 ? 'medium' : 'low';
-        return `<div class="volume-card spike-${sc}" onclick="selectVolumeAsset('${v.symbol}')">
+    grid.innerHTML = scanData.map(d => {
+        const spikeClass = d.spike >= 3 ? 'spike-high' : d.spike >= 2 ? 'spike-medium' : 'spike-low';
+        const barWidth = Math.min((d.spike / 6) * 100, 100);
+        const barColor = d.spike >= 3 ? 'var(--accent-bear)' : d.spike >= 2 ? 'var(--accent-warn)' : 'var(--accent-bull)';
+        return `<div class="volume-card">
             <div class="volume-card-header">
-                <span class="volume-asset">${v.icon || ''} ${v.symbol}</span>
-                <span class="volume-spike-badge ${sc}">${v.spike.toFixed(1)}x</span>
+                <span class="volume-card-symbol">${d.icon} ${d.symbol}</span>
+                <span class="volume-card-spike ${spikeClass}">${d.spike.toFixed(1)}x</span>
             </div>
-            <div class="volume-card-body">
-                <div class="volume-stat"><span class="volume-stat-label">Vol 24h</span><span class="volume-stat-value">${formatUSD(v.vol24h)}</span></div>
-                <div class="volume-stat"><span class="volume-stat-label">7d Avg</span><span class="volume-stat-value">${formatUSD(v.avg7d)}</span></div>
-                <div class="volume-stat"><span class="volume-stat-label">Price</span><span class="volume-stat-value">${formatUSD(v.price)}</span></div>
-                <div class="volume-stat"><span class="volume-stat-label">24h Chg</span><span class="volume-stat-value ${v.change24h >= 0 ? 'positive-text' : 'negative-text'}">${v.change24h >= 0 ? '+' : ''}${v.change24h.toFixed(2)}%</span></div>
-            </div>
+            <div style="font-size:0.68rem;color:var(--text-faint);margin-top:4px">${d.name} • Vol: ${formatUSD(d.currentVol)}</div>
+            <div class="volume-card-bar"><div class="volume-card-bar-fill" style="width:${barWidth}%;background:${barColor}"></div></div>
         </div>`;
     }).join('');
-}
-
-function selectVolumeAsset(symbol) {
-    const container = document.getElementById('volume-chart-container');
-    document.querySelectorAll('.volume-card').forEach(c => c.classList.remove('selected'));
-    const clicked = [...document.querySelectorAll('.volume-card')].find(c => c.querySelector('.volume-asset').textContent.includes(symbol));
-    if (clicked) clicked.classList.add('selected');
-    container.innerHTML = '';
-    const chartDiv = document.createElement('div');
-    chartDiv.style.cssText = 'width:100%;height:300px';
-    container.appendChild(chartDiv);
-    try {
-        const chart = LightweightCharts.createChart(chartDiv, {
-            width: chartDiv.clientWidth, height: 300,
-            layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#94a3b8' },
-            grid: { vertLines: { color: 'rgba(148,163,184,0.05)' }, horzLines: { color: 'rgba(148,163,184,0.05)' } },
-            timeScale: { borderColor: 'rgba(148,163,184,0.1)' }, rightPriceScale: { borderColor: 'rgba(148,163,184,0.1)' },
-        });
-        const vs = chart.addHistogramSeries({ color: '#6366f1', priceFormat: { type: 'volume' } });
-        const now = Math.floor(Date.now() / 1000);
-        const data = [];
-        for (let i = 30; i >= 0; i--) { data.push({ time: now - i * 86400, value: rand(1e6, 1e8), color: i < 3 ? '#ef4444' : '#6366f1' }); }
-        vs.setData(data);
-        chart.timeScale().fitContent();
-        new ResizeObserver(() => chart.applyOptions({ width: chartDiv.clientWidth })).observe(chartDiv);
-    } catch(e) {
-        container.innerHTML = `<div class="empty-state small"><p>Loading chart...</p></div>`;
-    }
-}
-
-// ===================== WALLET TRACKER =====================
-(function() {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            const btn = document.getElementById('wallet-search-btn');
-            const inp = document.getElementById('wallet-search-input');
-            if (btn) btn.addEventListener('click', () => trackWallet(inp.value));
-            if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') trackWallet(inp.value); });
-            document.querySelectorAll('.sample-wallet-btn').forEach(b => b.addEventListener('click', () => trackWallet(b.dataset.address)));
-        }, 3000);
-    });
-})();
-
-function trackWallet(address) {
-    if (!address || address.length < 5) return;
-    const es = document.getElementById('wallet-empty-state');
-    if (es) es.style.display = 'none';
-    const isCrypto = address.startsWith('0x');
-    const wallet = {
-        address,
-        name: isCrypto ? randEl(['Crypto Whale Alpha', 'Deep Wallet', 'Crypto Giant']) : address.replace(/-/g, ' '),
-        icon: isCrypto ? '🐋' : '🏦',
-        totalValue: rand(5000000, 500000000),
-        pnl: rand(-15, 45),
-        holdings: isCrypto
-            ? state.tokens.filter(t => t.market === 'crypto').map(t => ({ symbol: t.symbol, value: rand(100000, 20000000), pct: rand(5, 40) }))
-            : [
-                ...state.tokens.filter(t => t.market === 'equities').slice(0, randInt(3,6)).map(t => ({ symbol: t.symbol, value: rand(5e6, 1e8), pct: rand(5, 25) })),
-                { symbol: 'XAU/USD', value: rand(1e7, 5e7), pct: rand(10, 30) },
-                { symbol: 'WTI', value: rand(5e6, 2e7), pct: rand(5, 15) },
-                { symbol: 'Treasuries', value: rand(2e7, 1e8), pct: rand(15, 40) },
-            ]
-    };
-    const container = document.getElementById('tracked-wallets');
-    const card = document.createElement('div');
-    card.className = 'wallet-card';
-    const pc = wallet.pnl >= 0 ? 'positive-text' : 'negative-text';
-    card.innerHTML = `
-        <div class="wallet-card-header">
-            <div class="wallet-identity">
-                <div class="wallet-avatar">${wallet.icon}</div>
-                <div><div class="wallet-name">${wallet.name}</div><div class="wallet-address">${shortAddr(wallet.address)}</div></div>
-            </div>
-            <div class="wallet-balance">
-                <div class="wallet-total">${formatUSD(wallet.totalValue)}</div>
-                <div class="wallet-pnl ${pc}">${wallet.pnl >= 0 ? '+' : ''}${wallet.pnl.toFixed(2)}% PnL</div>
-            </div>
-        </div>
-        <div class="wallet-holdings">
-            ${wallet.holdings.map(h => `<div class="holding-item"><div class="holding-symbol">${h.symbol}</div><div class="holding-value">${formatUSD(h.value)}</div><div class="holding-pct">${h.pct.toFixed(1)}%</div></div>`).join('')}
-        </div>`;
-    container.insertBefore(card, container.firstChild);
-    document.getElementById('wallet-search-input').value = '';
-    showToast('🔍', `Tracking ${wallet.name}`, 'whale');
 }
 
 // ===================== COHORT ANALYSIS =====================
 function renderCohortAnalysis() {
     const tiers = [
-        { id: 'megalodon', count: randInt(50, 200), longPct: rand(55, 80) },
-        { id: 'whale', count: randInt(500, 2000), longPct: rand(45, 70) },
-        { id: 'dolphin', count: randInt(5000, 20000), longPct: rand(40, 65) },
-        { id: 'fish', count: randInt(50000, 200000), longPct: rand(35, 60) },
-        { id: 'shrimp', count: randInt(500000, 2000000), longPct: rand(30, 55) },
+        { id: 'sovereign', long: rand(55, 75) },
+        { id: 'institutional', long: rand(50, 70) },
+        { id: 'hedgefund', long: rand(40, 65) },
+        { id: 'family', long: rand(45, 60) },
+        { id: 'retail', long: rand(35, 55) },
     ];
-    tiers.forEach(t => {
-        document.getElementById(t.id + '-count').textContent = t.count.toLocaleString();
-        document.getElementById(t.id + '-position').textContent = t.longPct > 50 ? '📈 NET LONG' : '📉 NET SHORT';
-        document.getElementById(t.id + '-long').style.width = t.longPct + '%';
-        document.getElementById(t.id + '-short').style.width = (100 - t.longPct) + '%';
-        document.getElementById(t.id + '-long-pct').textContent = t.longPct.toFixed(0) + '% Long';
-        document.getElementById(t.id + '-short-pct').textContent = (100 - t.longPct).toFixed(0) + '% Short';
+    tiers.forEach(tier => {
+        const short = 100 - tier.long;
+        const el = id => document.getElementById(id);
+        el(tier.id + '-count').textContent = randInt(8, 200);
+        el(tier.id + '-position').textContent = formatUSD(rand(1e8, 50e9));
+        el(tier.id + '-long').style.width = tier.long + '%';
+        el(tier.id + '-short').style.width = short + '%';
+        el(tier.id + '-long-pct').textContent = tier.long.toFixed(0) + '% Long';
+        el(tier.id + '-short-pct').textContent = short.toFixed(0) + '% Short';
     });
+    renderCohortChart();
+}
 
-    try {
-        const ctx = document.getElementById('cohort-timeline-chart');
-        if (ctx && window.Chart) {
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 30}, (_, i) => `Day ${i+1}`),
-                    datasets: [
-                        { label: 'Institutional', data: generateSparkline(30, 70, 5), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4 },
-                        { label: 'Whale', data: generateSparkline(30, 60, 4), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.08)', fill: true, tension: 0.4 },
-                        { label: 'Dolphin', data: generateSparkline(30, 55, 6), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)', fill: true, tension: 0.4 },
-                        { label: 'Fish', data: generateSparkline(30, 50, 7), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)', fill: true, tension: 0.4 },
-                        { label: 'Retail', data: generateSparkline(30, 45, 8), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.08)', fill: true, tension: 0.4 },
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } } } },
-                    scales: {
-                        x: { ticks: { color: '#475569', maxTicksLimit: 10 }, grid: { color: 'rgba(148,163,184,0.05)' } },
-                        y: { ticks: { color: '#475569', callback: v => v + '% Long' }, grid: { color: 'rgba(148,163,184,0.05)' }, min: 20, max: 90 }
-                    }
-                }
-            });
-        }
-    } catch(e) {}
+function renderCohortChart() {
+    const ctx = document.getElementById('cohort-timeline-chart');
+    if (!ctx) return;
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const gen = (base) => labels.map(() => { base += rand(-5, 5); return Math.max(20, Math.min(80, base)); });
+    new Chart(ctx, {
+        type: 'line', data: {
+            labels, datasets: [
+                { label: 'Sovereign', data: gen(65), borderColor: '#8b5cf6', tension: 0.4, borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'Institutional', data: gen(60), borderColor: '#3b82f6', tension: 0.4, borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'Hedge Fund', data: gen(55), borderColor: '#10b981', tension: 0.4, borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'Family Office', data: gen(50), borderColor: '#eab308', tension: 0.4, borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'Retail', data: gen(45), borderColor: '#ef4444', tension: 0.4, borderWidth: 2, fill: false, pointRadius: 0 },
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } }, scales: { y: { ticks: { color: '#64748b', callback: v => v + '% Long' }, grid: { color: 'rgba(148,163,184,0.06)' } }, x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(148,163,184,0.06)' } } } }
+    });
+}
+
+// ===================== FILING MONITOR =====================
+function renderFilingMonitor() {
+    const feed = document.getElementById('filing-feed');
+    const regionF = document.getElementById('filing-region-filter')?.value || 'all';
+    let filtered = state.filings;
+    if (regionF !== 'all') filtered = filtered.filter(f => f.regulator === regionF);
+
+    feed.innerHTML = filtered.slice(0, 15).map(f => {
+        const regBadge = `<span class="regulator-badge ${f.regulator}">${f.regulatorName}</span>`;
+        const holdingsHTML = f.holdings.map(h => {
+            const changeClass = parseFloat(h.change) >= 0 ? 'change-up' : 'change-down';
+            const arrow = parseFloat(h.change) >= 0 ? '▲' : '▼';
+            return `<span class="filing-holding-chip">${h.symbol} <span class="${changeClass}">${arrow}${Math.abs(h.change)}%</span></span>`;
+        }).join('');
+        const cikLink = f.cik ? `<a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${f.cik}&type=13F" target="_blank" rel="noopener" class="filing-link">🏛️ SEC EDGAR (CIK: ${f.cik})</a>` : '';
+        const regLink = {
+            bafin: '<a href="https://www.bafin.de/EN/PublikationenDaten/Datenbanken/Stimmrechte/stimmrechte_node_en.html" target="_blank" rel="noopener" class="filing-link">🇩🇪 BaFin Database</a>',
+            amf: '<a href="https://www.amf-france.org/en/databases-and-tools" target="_blank" rel="noopener" class="filing-link">🇫🇷 AMF BDIF</a>',
+            fca: '<a href="https://www.fca.org.uk/markets/primary-markets/regulatory-disclosures" target="_blank" rel="noopener" class="filing-link">🇬🇧 FCA RNS</a>',
+            edinet: '<a href="https://disclosure2.edinet-fsa.go.jp" target="_blank" rel="noopener" class="filing-link">🇯🇵 EDINET</a>',
+            hkex: '<a href="https://www.hkexnews.hk/sdw/search/searchsdw.aspx" target="_blank" rel="noopener" class="filing-link">🇭🇰 HKEX DOI</a>',
+        }[f.regulator] || '';
+
+        return `<div class="filing-card">
+            <div class="filing-card-header">
+                <div class="filing-card-title">${f.profile?.icon || '🏛️'} ${f.entity} ${regBadge} <span class="filing-badge">${f.filingType}</span></div>
+                <div class="filing-card-meta">${f.date} • Total Value: ${formatUSD(f.totalValue)}</div>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-faint)">${f.profile?.strategy || ''} • ${f.profile?.hq || ''} • AUM: ${formatUSD(f.profile?.aum || 0)}</div>
+            <div class="filing-holdings">${holdingsHTML}</div>
+            <div class="filing-links">${cikLink}${regLink}<a href="https://whalewisdom.com" target="_blank" rel="noopener" class="filing-link">🦑 WhaleWisdom</a></div>
+        </div>`;
+    }).join('');
+
+    // Stats
+    document.getElementById('stat-filings-count').textContent = state.filings.length;
+    document.getElementById('stat-inst-reporting').textContent = new Set(state.filings.map(f => f.entity)).size;
+    const avgChange = state.filings.flatMap(f => f.holdings.map(h => parseFloat(h.change)));
+    document.getElementById('stat-avg-change').textContent = (avgChange.reduce((a, b) => a + b, 0) / avgChange.length).toFixed(1) + '%';
+    document.getElementById('stat-largest-filing').textContent = formatUSD(Math.max(...state.filings.map(f => f.totalValue)));
+}
+
+// ===================== INSTITUTIONAL TRACKER =====================
+function setupInstitutionalTracker() {
+    document.querySelectorAll('.sample-wallet-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const name = btn.dataset.address;
+            trackInstitution(name);
+        });
+    });
+    document.getElementById('inst-search-btn')?.addEventListener('click', () => {
+        const v = document.getElementById('inst-search-input').value.trim();
+        if (v) trackInstitution(v);
+    });
+}
+
+function trackInstitution(query) {
+    const q = query.toLowerCase();
+    const match = Object.entries(ENTITY_PROFILES).find(([name]) => name.toLowerCase().includes(q));
+    if (!match) { showToast('⚠️', 'Institution not found in database', 'alert'); return; }
+    const [name, profile] = match;
+    const panel = document.getElementById('inst-detail-panel');
+    const emptyState = document.getElementById('inst-empty-state');
+    if (emptyState) emptyState.style.display = 'none';
+    panel.classList.remove('hidden');
+
+    // Generate holdings
+    const stocks = TOKENS.filter(t => t.market === 'equities');
+    const holdings = [];
+    for (let i = 0; i < randInt(5, 12); i++) {
+        const s = randEl(stocks);
+        holdings.push({ symbol: s.symbol, name: s.name, shares: randInt(100000, 10e6), value: rand(10e6, 5e9), change: rand(-30, 60).toFixed(1) });
+    }
+
+    const regLinks = {
+        sec: `<a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${profile.cik || ''}&type=13F&dateb=&owner=include&count=10" target="_blank" class="filing-link">🏛️ SEC EDGAR</a>`,
+        bafin: '<a href="https://www.bafin.de" target="_blank" class="filing-link">🇩🇪 BaFin</a>',
+        amf: '<a href="https://www.amf-france.org" target="_blank" class="filing-link">🇫🇷 AMF</a>',
+        fca: '<a href="https://www.fca.org.uk" target="_blank" class="filing-link">🇬🇧 FCA</a>',
+        edinet: '<a href="https://disclosure2.edinet-fsa.go.jp" target="_blank" class="filing-link">🇯🇵 EDINET</a>',
+        hkex: '<a href="https://www.hkexnews.hk" target="_blank" class="filing-link">🇭🇰 HKEX</a>',
+    };
+
+    panel.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+            <div>
+                <h2 style="font-size:1.2rem;font-weight:800">${profile.icon} ${name}</h2>
+                <p style="font-size:0.78rem;color:var(--text-faint)">${profile.sector} • ${profile.hq} • Founded ${profile.founded || '—'}</p>
+            </div>
+            <div style="text-align:right">
+                <div style="font-family:var(--font-mono);font-size:1.1rem;font-weight:700">${formatUSD(profile.aum)}</div>
+                <div style="font-size:0.68rem;color:var(--text-faint)">Assets Under Management</div>
+            </div>
+        </div>
+        <div class="alert-detail-grid">
+            <div class="alert-detail-card"><h4>Strategy</h4><p>${profile.strategy}</p></div>
+            <div class="alert-detail-card"><h4>CEO / Manager</h4><p>${profile.ceo}</p></div>
+            <div class="alert-detail-card"><h4>Track Record</h4><p>Win Rate: ${profile.track.win}%<br>90d P&L: ${profile.track.avg90d > 0 ? '+' : ''}${profile.track.avg90d}%<br>Trades: ${profile.track.trades.toLocaleString()}</p></div>
+            <div class="alert-detail-card"><h4>Region / Regulator</h4><p>${{ us:'🇺🇸 Americas', eu:'🇪🇺 Europe', asia:'🌏 Asia-Pacific', global:'🌍 Global' }[profile.region] || '🌍 Global'}<br>Filed via: ${{ sec:'SEC EDGAR', bafin:'BaFin', amf:'AMF', fca:'FCA', edinet:'EDINET', hkex:'HKEX' }[profile.regulator] || '—'}</p></div>
+        </div>
+        <h3 class="subsection-title" style="margin-top:16px">📊 Top Holdings (Simulated from latest filing)</h3>
+        <div class="filing-holdings" style="margin-bottom:12px">${holdings.map(h => {
+            const cc = parseFloat(h.change) >= 0 ? 'change-up' : 'change-down';
+            const arrow = parseFloat(h.change) >= 0 ? '▲' : '▼';
+            return `<span class="filing-holding-chip">${h.symbol} ${formatUSD(h.value)} <span class="${cc}">${arrow}${Math.abs(h.change)}%</span></span>`;
+        }).join('')}</div>
+        <div class="filing-links">${regLinks[profile.regulator] || regLinks.sec}<a href="https://whalewisdom.com" target="_blank" class="filing-link">🦑 WhaleWisdom</a><a href="https://finviz.com" target="_blank" class="filing-link">📈 Finviz</a></div>
+    `;
 }
 
 // ===================== COMMUNITY INTEL =====================
 function renderCommunityIntel() {
+    // Sentiment stats
     const sentiments = state.posts.map(p => p.sentimentScore);
-    const avg = sentiments.reduce((a, b) => a + b, 0) / sentiments.length;
-    document.getElementById('stat-sentiment').textContent = avg > 0.15 ? '🟢 Bullish' : avg < -0.15 ? '🔴 Bearish' : '🟡 Neutral';
-    document.getElementById('stat-posts-count').textContent = state.posts.length.toLocaleString();
-    document.getElementById('stat-trending').textContent = randEl(TOPICS);
+    const avgSent = sentiments.reduce((a, b) => a + b, 0) / sentiments.length;
+    document.getElementById('stat-sentiment').textContent = avgSent > 0.2 ? '🟢 Bullish' : avgSent < -0.2 ? '🔴 Bearish' : '🟡 Neutral';
+    document.getElementById('stat-posts-count').textContent = state.posts.length;
+    document.getElementById('stat-trending').textContent = randEl(TOPICS).split(' ').slice(0,3).join(' ');
     document.getElementById('stat-fear').textContent = state.fearGreedIndex + '/100';
 
-    document.getElementById('sentiment-heatmap').innerHTML = state.tokens.map(t => {
-        const score = rand(-1, 1);
-        const bg = score > 0.3 ? 'rgba(16,185,129,0.2)' : score < -0.3 ? 'rgba(239,68,68,0.2)' : 'rgba(148,163,184,0.08)';
-        const label = score > 0.3 ? 'Bullish' : score < -0.3 ? 'Bearish' : 'Neutral';
-        return `<div class="sentiment-cell" style="background:${bg}">
-            <span class="sent-symbol">${t.icon || ''} ${t.symbol}</span>
-            <span class="sent-score">${(score * 100).toFixed(0)}</span>
-            <span class="sent-label">${label}</span>
+    // Sentiment heatmap
+    const heatmap = document.getElementById('sentiment-heatmap');
+    const equities = state.tokens.filter(t => t.market === 'equities' || t.market === 'indices').slice(0, 16);
+    heatmap.innerHTML = equities.map(t => {
+        const s = rand(-1, 1);
+        const bg = s > 0.3 ? 'rgba(16,185,129,0.15)' : s < -0.3 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.1)';
+        const color = s > 0.3 ? 'var(--accent-bull)' : s < -0.3 ? 'var(--accent-bear)' : 'var(--accent-warn)';
+        return `<div class="sentiment-cell" style="background:${bg};color:${color}"><span class="sent-symbol">${t.symbol}</span><span class="sent-score">${s > 0 ? '+' : ''}${s.toFixed(2)}</span></div>`;
+    }).join('');
+
+    // Word cloud
+    const cloud = document.getElementById('word-cloud');
+    cloud.innerHTML = TOPICS.slice(0, 20).map(t => `<span class="word-tag" style="font-size:${rand(0.65, 1.1).toFixed(2)}rem">${t}</span>`).join('');
+
+    // Posts
+    const posts = document.getElementById('community-posts');
+    posts.innerHTML = state.posts.slice(0, 10).map(p => {
+        return `<div class="community-post">
+            <div class="post-title">${p.title}</div>
+            <div class="post-meta">
+                <span>r/${p.subreddit}</span><span>⬆️ ${p.upvotes}</span><span>💬 ${p.comments}</span>
+                <span class="post-sentiment ${p.sentiment}">${p.sentiment}</span>
+                <span>${p.author} • ${timeAgo(Date.now() - p.time)}</span>
+            </div>
         </div>`;
     }).join('');
-
-    document.getElementById('word-cloud').innerHTML = TOPICS.map(topic => {
-        const size = rand(0.7, 1.6);
-        const colors = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#818cf8', '#34d399', '#60a5fa', '#06b6d4', '#8b5cf6'];
-        return `<span class="cloud-word" style="font-size:${size}rem;color:${randEl(colors)}">${topic}</span>`;
-    }).join('');
-
-    document.getElementById('community-posts').innerHTML = state.posts.map(p => `
-        <div class="post-item">
-            <div class="post-sentiment-indicator ${p.sentiment}"></div>
-            <div class="post-info">
-                <div class="post-title-text">${p.title}</div>
-                <div class="post-meta">
-                    <span class="post-subreddit">r/${p.subreddit}</span>
-                    <span>${p.author}</span>
-                    <span>${timeAgo(Date.now() - p.time)}</span>
-                    <span>💬 ${p.comments}</span>
-                </div>
-            </div>
-            <div class="post-score"><span class="score-value">⬆ ${p.upvotes}</span><span class="${p.sentiment === 'positive' ? 'positive-text' : p.sentiment === 'negative' ? 'negative-text' : ''}">${(p.sentimentScore * 100).toFixed(0)}%</span></div>
-        </div>
-    `).join('');
 }
 
 // ===================== DATA SOURCES =====================
 function renderDataSources() {
-    document.getElementById('sources-grid').innerHTML = DATA_SOURCES.map(s => `
-        <div class="source-card">
+    const grid = document.getElementById('sources-grid');
+    grid.innerHTML = DATA_SOURCES.map(s => {
+        const regionBadge = s.region ? `<span class="region-tag ${s.region === 'global' ? 'global' : s.region}">${{ us: '🇺🇸 US', eu: '🇪🇺 EU', asia: '🌏 ASIA', global: '🌍 GLOBAL' }[s.region] || ''}</span>` : '';
+        return `<div class="source-card">
             <div class="source-card-header">
-                <div class="source-icon">${s.icon}</div>
-                <div>
-                    <div class="source-name">${s.name}</div>
-                    <div class="source-type">${s.type}</div>
-                </div>
+                <span class="source-icon">${s.icon}</span>
+                <div><div class="source-name">${s.name} ${regionBadge}</div><div class="source-type">${s.type}</div></div>
             </div>
             <div class="source-desc">${s.desc}</div>
             <div class="source-tags">${s.tags.map(t => `<span class="source-tag">${t}</span>`).join('')}</div>
-            <a href="${s.url}" target="_blank" rel="noopener" class="source-link">🔗 Visit Source</a>
-            <div class="source-status">
-                <span class="source-status-dot ${s.status}"></span>
-                <span>${s.status === 'active' ? 'Integrated' : 'Planned'}</span>
-            </div>
-        </div>
-    `).join('');
+            <a href="${s.url}" target="_blank" rel="noopener" class="source-link">🔗 Visit ${s.name}</a>
+            <span class="source-status ${s.status}">● ${s.status}</span>
+        </div>`;
+    }).join('');
 }
 
 // ===================== SETTINGS =====================
 function setupSettings() {
-    document.getElementById('save-api-keys')?.addEventListener('click', async () => {
-        const keys = {
-            finnhub: document.getElementById('api-finnhub')?.value || '',
-            coingecko: document.getElementById('api-coingecko')?.value || '',
-            etherscan: document.getElementById('api-etherscan')?.value || '',
+    const keys = LiveData.getApiKeys();
+    if (keys.finnhub) document.getElementById('api-finnhub').value = keys.finnhub;
+
+    document.getElementById('save-api-keys')?.addEventListener('click', () => {
+        const obj = {
+            finnhub: document.getElementById('api-finnhub').value.trim(),
         };
-        localStorage.setItem('whalevault_api_keys', JSON.stringify(keys));
-        showToast('🔄', 'Saving keys and connecting...', 'whale');
+        localStorage.setItem('whalevault_api_keys', JSON.stringify(obj));
+        showToast('✅', 'API keys saved! Refreshing data...', 'bull');
         LiveData.cache = {};
-        LiveData.isLive = { crypto: false, stocks: false };
-        const updated = await LiveData.syncAll();
-        if (updated > 0) {
-            showToast('✅', `Connected! ${updated} assets with live prices.`, 'bull');
-            updateTickers();
-            renderHeatmap();
-            renderMarketTable();
-            renderMarketOverview();
-        } else {
-            showToast('⚠️', 'Please check your API keys.', 'alert');
-        }
+        LiveData.syncAll().then(n => {
+            if (n > 0) showToast('🟢', `${n} assets now live!`, 'bull');
+            updateTickers(); renderMarketOverview();
+        });
     });
 
-    document.getElementById('clear-cache')?.addEventListener('click', () => {
-        localStorage.removeItem('whalevault_cache');
-        LiveData.cache = {};
-        document.getElementById('cache-size').textContent = '0 KB';
-        showToast('🗑️', 'Cache cleared', 'alert');
-    });
-
+    document.getElementById('clear-cache')?.addEventListener('click', () => { LiveData.cache = {}; localStorage.removeItem('whalevault_cache'); showToast('🗑️', 'Cache cleared', 'alert'); });
     document.getElementById('export-data')?.addEventListener('click', () => {
-        const blob = new Blob([JSON.stringify({ alerts: state.alerts, tokens: state.tokens, posts: state.posts }, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'whalevault_export.json'; a.click();
-        showToast('📥', 'Data exported', 'whale');
+        const data = { alerts: state.alerts.slice(0, 50), filings: state.filings, tokens: state.tokens, timestamp: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'whalevault-export.json'; a.click();
+        showToast('📦', 'Data exported!', 'bull');
     });
 
-    // Load saved keys
-    try {
-        const saved = JSON.parse(localStorage.getItem('whalevault_api_keys') || '{}');
-        if (saved.finnhub) { const el = document.getElementById('api-finnhub'); if (el) el.value = saved.finnhub; }
-        if (saved.coingecko) { const el = document.getElementById('api-coingecko'); if (el) el.value = saved.coingecko; }
-        if (saved.etherscan) { const el = document.getElementById('api-etherscan'); if (el) el.value = saved.etherscan; }
-    } catch(e) {}
+    // Alert filters
+    ['alert-chain-filter', 'alert-impact-filter', 'alert-region-filter'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', renderWhaleAlerts);
+    });
+    document.getElementById('alert-pause')?.addEventListener('click', () => {
+        state.alertsPaused = !state.alertsPaused;
+        showToast(state.alertsPaused ? '⏸️' : '▶️', state.alertsPaused ? 'Feed paused' : 'Feed resumed', 'alert');
+    });
 
-    let total = 0;
-    for (let key in localStorage) { if (key.startsWith('whalevault')) total += (localStorage[key] || '').length; }
-    document.getElementById('cache-size').textContent = (total / 1024).toFixed(1) + ' KB';
-}
+    ['filing-region-filter', 'filing-type-filter'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', renderFilingMonitor);
+    });
+    ['volume-timeframe', 'volume-min-spike'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', renderVolumeScanner);
+    });
 
-// ===================== TOAST =====================
-function showToast(icon, message, type = 'whale') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-message">${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => { toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 300); }, 4000);
+    // Cache size
+    const cacheSize = JSON.stringify(localStorage).length;
+    const cacheEl = document.getElementById('cache-size');
+    if (cacheEl) cacheEl.textContent = (cacheSize / 1024).toFixed(1) + ' KB';
 }
 
 // ===================== LIVE UPDATES =====================
 function startLiveUpdates() {
-    // Whale alert simulation
+    // New alerts every 8-15 seconds
     setInterval(() => {
         if (state.alertsPaused) return;
         const alert = generateWhaleAlert();
-        alert.time = Date.now();
         state.alerts.unshift(alert);
         if (state.alerts.length > 100) state.alerts.pop();
-        if (state.currentSection === 'whale-alerts') {
-            const feed = document.getElementById('alert-feed');
-            const div = document.createElement('div');
-            div.innerHTML = renderAlertHTML(alert);
-            const newItem = div.firstElementChild;
-            newItem.classList.add('new-alert');
-            feed.insertBefore(newItem, feed.firstElementChild);
-        }
-        document.getElementById('alert-count').textContent = state.alerts.length;
-        updateAlertStats();
-        if (alert.impact === 'high') showToast('🐋', `${formatUSD(alert.amount)} ${alert.token} ${alert.type} detected!`, 'bear');
-    }, randInt(5000, 12000));
+        if (state.currentTab === 'alerts') { renderWhaleAlerts(); updateAlertStats(); }
+        if (state.currentTab === 'home') { renderHomeKPIs(); renderCarousel(); }
+        addNotification(alert.type === 'buy' ? '🟢' : alert.type === 'sell' ? '🔴' : '🟠', `${alert.whaleName} ${alert.type}s ${formatUSD(alert.amount)} in ${alert.tokenName}`);
+        // Update tab badge
+        const tabBadge = document.getElementById('tab-alert-count');
+        if (tabBadge) tabBadge.textContent = state.alerts.length;
+    }, randInt(8000, 15000));
 
-    // LIVE DATA SYNC: every 60 seconds
-    setInterval(async () => {
-        const updated = await LiveData.syncAll();
-        if (updated > 0) {
-            updateTickers();
-            if (state.currentSection === 'market-overview') {
-                renderHeatmap();
-                renderMarketOverview();
-            }
-            const now = new Date();
-            document.getElementById('last-update').textContent = `Last update: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-        }
-    }, 60000);
-
-    // Demo mode drift for non-live tokens
+    // Price micro-ticks every 3 seconds
     setInterval(() => {
         state.tokens.forEach(t => {
             if (!t._live) {
-                t.price *= (1 + rand(-0.002, 0.002));
-                t.change24h += rand(-0.05, 0.05);
+                const volatility = t.market === 'indices' ? 0.02 : 0.05;
+                const pctChange = (Math.random() - 0.5) * volatility;
+                t.price *= (1 + pctChange / 100);
+                t.change24h += (Math.random() - 0.5) * 0.05;
             }
         });
         updateTickers();
-        if (!LiveData.isLive.crypto && !LiveData.isLive.stocks) {
-            state.fearGreedIndex = Math.max(5, Math.min(95, state.fearGreedIndex + randInt(-1, 2)));
-        }
-    }, 5000);
+    }, 3000);
+
+    // Full data sync every 60 seconds
+    setInterval(async () => {
+        const updated = await LiveData.syncAll();
+        if (updated > 0 && state.currentTab === 'markets') renderMarketOverview();
+        updateTickers();
+        const ts = new Date().toLocaleTimeString();
+        document.getElementById('last-update').textContent = 'Last update: ' + ts;
+        const drawerUpdate = document.getElementById('drawer-last-update');
+        if (drawerUpdate) drawerUpdate.textContent = 'Last update: ' + ts;
+    }, 60000);
 }
