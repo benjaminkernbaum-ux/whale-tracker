@@ -364,6 +364,21 @@ async function seedSupabase(){
 }
 seedSupabase();
 
+async function getSessionUserAsync(req){
+  // 1. Try Supabase JWT
+  const token=req.headers.authorization?.replace('Bearer ','');
+  if(token&&supabaseAdmin){
+    try{
+      const{data:{user},error}=await supabaseAdmin.auth.getUser(token);
+      if(user&&!error)return user.id;
+    }catch{}
+  }
+  // 2. Try x-user-id header
+  if(req.headers['x-user-id'])return req.headers['x-user-id'];
+  // 3. Fallback
+  return req.query.uid||'demo_user';
+}
+// Sync wrapper for backward compat
 function getSessionUser(req){return req.headers['x-user-id']||req.query.uid||'demo_user';}
 
 // Helper: get profile (DB first, fallback to memory)
@@ -394,7 +409,7 @@ app.get('/api/posts', async(req,res)=>{
 app.post('/api/posts', async(req,res)=>{
   const{content,tags}=req.body;
   if(!content||!content.trim())return res.status(400).json({error:'Content required'});
-  const user_id=getSessionUser(req);
+  const user_id=await getSessionUserAsync(req);
   try{
     if(db){
       const{data,error}=await db.from('community_posts').insert({user_id,content:content.trim(),tags:tags||[],reactions:{fire:0,whale:0,diamond:0,rocket:0},comments_count:0}).select().single();
@@ -458,7 +473,7 @@ app.get('/api/projects', async(req,res)=>{
 app.post('/api/projects', async(req,res)=>{
   const{name,category,description,website,github,chain}=req.body;
   if(!name||!category||!description)return res.status(400).json({error:'Name, category, description required'});
-  const user_id=getSessionUser(req);
+  const user_id=await getSessionUserAsync(req);
   try{
     if(db){
       const{data,error}=await db.from('projects').insert({user_id,name,category,description,website:website||'',github:github||'',chain:chain||'',upvotes:0,featured:false}).select().single();
@@ -470,7 +485,7 @@ app.post('/api/projects', async(req,res)=>{
 });
 
 app.post('/api/projects/:id/upvote', async(req,res)=>{
-  const user_id=getSessionUser(req);
+  const user_id=await getSessionUserAsync(req);
   try{
     if(db){
       const{data:existing}=await db.from('upvotes').select('id').eq('user_id',user_id).eq('project_id',req.params.id).single();
@@ -522,7 +537,7 @@ app.get('/api/strategies', async(req,res)=>{
 app.post('/api/strategies', async(req,res)=>{
   const{name,category,thesis,assets,timeframe,risk_level}=req.body;
   if(!name||!category||!thesis)return res.status(400).json({error:'Name, category, thesis required'});
-  const user_id=getSessionUser(req);
+  const user_id=await getSessionUserAsync(req);
   try{
     if(db){
       const{data,error}=await db.from('strategies').insert({user_id,name,category,thesis,assets:assets||[],timeframe:timeframe||'',risk_level:risk_level||'medium',pnl_30d:0,pnl_90d:0,followers_count:0}).select().single();
@@ -534,7 +549,7 @@ app.post('/api/strategies', async(req,res)=>{
 });
 
 app.post('/api/strategies/:id/follow', async(req,res)=>{
-  const user_id=getSessionUser(req);
+  const user_id=await getSessionUserAsync(req);
   try{
     if(db){
       const{data:existing}=await db.from('follows').select('id').eq('follower_id',user_id).eq('following_id',req.params.id).eq('follow_type','strategy').single();
@@ -574,7 +589,7 @@ app.get('/api/profile/:id', async(req,res)=>{
 });
 
 app.put('/api/profile', async(req,res)=>{
-  const user_id=getSessionUser(req);
+  const user_id=await getSessionUserAsync(req);
   const{display_name,bio,role,social_links,wallet_addresses}=req.body;
   try{
     if(db){
@@ -612,7 +627,7 @@ app.get('/api/comments/:parentType/:parentId', async(req,res)=>{
 app.post('/api/comments', async(req,res)=>{
   const{parent_type,parent_id,content}=req.body;
   if(!parent_type||!parent_id||!content?.trim())return res.status(400).json({error:'parent_type, parent_id, content required'});
-  const user_id=getSessionUser(req);
+  const user_id=await getSessionUserAsync(req);
   try{
     if(db){
       const{data,error}=await db.from('comments').insert({user_id,parent_type,parent_id,content:content.trim()}).select().single();

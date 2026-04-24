@@ -3192,7 +3192,18 @@ const communityState = { projCat:'all', stratCat:'all', stratSort:'pnl' };
 const catLabels = {nft_art:'NFT Art',defi:'DeFi',dev_tool:'Dev Tool',dao:'DAO',gamefi:'GameFi'};
 const catIcons = {nft_art:'🎨',defi:'💰',dev_tool:'🛠️',dao:'🏛️',gamefi:'🎮'};
 const stratCatLabels = {swing:'Swing',scalp:'Scalp',dca:'DCA',yield_farming:'Yield Farming',nft_flipping:'NFT Flipping',arbitrage:'Arbitrage'};
-async function apiFetch(u,o){try{const r=await fetch(u,o);return r.ok?await r.json():null}catch{return null}}
+async function apiFetch(u,o){
+  try{
+    if(!o)o={};
+    if(!o.headers)o.headers={};
+    // Send auth identity
+    if(window.WV&&window.WV.user){
+      o.headers['x-user-id']=window.WV.user.id;
+      try{const s=await window.WV.supabase?.auth?.getSession();if(s?.data?.session?.access_token)o.headers['Authorization']='Bearer '+s.data.session.access_token;}catch{}
+    }
+    const r=await fetch(u,o);return r.ok?await r.json():null;
+  }catch{return null}
+}
 function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return'now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
 
 async function renderProjects(){
@@ -3228,9 +3239,9 @@ async function reactPost(id,type){await apiFetch('/api/posts/'+id+'/react',{meth
 window.reactPost=reactPost;
 
 async function renderProfile(){
-  var d=await apiFetch('/api/profile/demo_user');
+  var uid=(window.WV&&window.WV.user)?window.WV.user.id:'demo_user';var d=await apiFetch('/api/profile/'+uid);
   if(d){
-    if($('#profileName'))$('#profileName').textContent=d.display_name||'Guest';
+    if($('#profileName'))$('#profileName').textContent=d.display_name||(window.WV&&window.WV.user?window.WV.user.user_metadata?.full_name:'Guest')||'Guest';
     if($('#profileRole'))$('#profileRole').textContent=d.role||'Explorer';
     if($('#profileBio'))$('#profileBio').textContent=d.bio||'';
     if($('#profFollowers'))$('#profFollowers').textContent=d.followers_count||0;
@@ -3820,6 +3831,8 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
     // Hide auth modal
     closeAuthModal();
 
+    // Auto-create/update profile in Supabase
+    apiFetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json','x-user-id':user.id},body:JSON.stringify({display_name:name,bio:'',role:'investor',social_links:{}})});
     // Sync data from cloud
     syncFromCloud();
 
