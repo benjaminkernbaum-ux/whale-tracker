@@ -21,7 +21,7 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
 // ── Middleware ──
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // ── In-memory cache ──
 const priceCache = new Map();
@@ -60,7 +60,7 @@ app.get('/api/config', (req, res) => {
     supabaseUrl: process.env.SUPABASE_URL || null,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || null,
     hasAuth: !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY),
-    version: '10.0.0'
+    version: '11.0.0'
   });
 });
 
@@ -183,7 +183,7 @@ app.get('/api/edgar/:cik', async (req, res) => {
   if (cached) return res.json(cached);
   try {
     const resp = await fetch(`https://data.sec.gov/submissions/CIK${paddedCik}.json`, {
-      headers: { 'User-Agent': 'WhaleVault/10.0 (contact@whalevault.io)' }
+      headers: { 'User-Agent': 'Mobidic/11.0 (contact@mobidic.io)' }
     });
     if (!resp.ok) throw new Error(`SEC ${resp.status}`);
     const data = await resp.json();
@@ -320,7 +320,7 @@ let wsClients = new Set();
 
 wss.on('connection', (ws) => {
   wsClients.add(ws);
-  ws.send(JSON.stringify({ type: 'connected', clients: wsClients.size, version: '10.0.0' }));
+  ws.send(JSON.stringify({ type: 'connected', clients: wsClients.size, version: '11.0.0' }));
   if (whaleTransactions.length > 0) {
     ws.send(JSON.stringify({ type: 'whales', data: whaleTransactions.slice(0, 20), ts: lastWhaleCheck }));
   }
@@ -367,7 +367,7 @@ async function whaleTick() {
 
 // ── Boot ──
 server.listen(PORT, () => {
-  console.log(`\n  🐋 WhaleVault v10.0 — Live Data Engine`);
+  console.log(`\n  🐋 Mobidic v11.0 — Web3 Community Platform`);
   console.log(`  🌐 http://localhost:${PORT}`);
   console.log(`  📊 API: Finnhub • CoinGecko • Blockchair • Fear&Greed • SEC EDGAR`);
   console.log(`  🔐 Auth: ${supabaseAdmin ? 'Supabase ✓' : 'Disabled'}`);
@@ -375,7 +375,7 @@ server.listen(PORT, () => {
 
   whaleTick();
   setInterval(whaleTick, 60000);
-  console.log('  🐋 Whale feed: ACTIVE (60s)');
+  console.log('  🐋 Mobidic feed: ACTIVE (60s)');
 
   if (process.env.FINNHUB_API_KEY) {
     priceTick();

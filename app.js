@@ -1,5 +1,5 @@
 // ============================================================
-// WHALEVAULT v6.0 — Global Equity Intelligence Terminal
+// MOBIDIC v11.0 — Web3 Community Platform
 // Markets: S&P500, NASDAQ, DOW, RUT, DAX, CAC40, FTSE, HK50, NI225
 // Equities: Magnificent 7 + 20 Major Stocks
 // Sources: SEC EDGAR, BaFin, AMF, FCA, EDINET, HKEX, CFTC
@@ -31,7 +31,7 @@ const LiveData = {
     isLive: { stocks: false },
 
     getApiKeys() {
-        try { return JSON.parse(localStorage.getItem('whalevault_api_keys') || '{}'); }
+        try { return JSON.parse(localStorage.getItem('mobidic_api_keys') || '{}'); }
         catch { return {}; }
     },
 
@@ -389,7 +389,7 @@ function generateInsight(type, market, tokenName, amount, entity) {
             equities: [
                 `${entity} initiates ${formatUSD(amount)} position in ${tokenName}. ${regName} filing shows ${ceo}'s team sees undervaluation vs peer group.`,
                 `13F reveals ${entity} accumulated ${tokenName} shares. High-conviction bet — dark pool data confirms sustained institutional accumulation.`,
-                `${entity} increases ${tokenName} stake by ${rand(10,45).toFixed(0)}%. ${regName} filing detected by WhaleVault — contrarian play amid sector weakness.`,
+                `${entity} increases ${tokenName} stake by ${rand(10,45).toFixed(0)}%. ${regName} filing detected by Mobidic — contrarian play amid sector weakness.`,
             ],
             indices: [
                 `${entity} increasing exposure to ${tokenName}. ${ceo} sees value after pullback — systematic models triggered momentum signals.`,
@@ -1201,7 +1201,7 @@ function setupSettings() {
         const obj = {
             finnhub: document.getElementById('api-finnhub').value.trim(),
         };
-        localStorage.setItem('whalevault_api_keys', JSON.stringify(obj));
+        localStorage.setItem('mobidic_api_keys', JSON.stringify(obj));
         showToast('✅', 'API keys saved! Refreshing data...', 'bull');
         LiveData.cache = {};
         LiveData.syncAll().then(n => {
@@ -1210,11 +1210,11 @@ function setupSettings() {
         });
     });
 
-    document.getElementById('clear-cache')?.addEventListener('click', () => { LiveData.cache = {}; localStorage.removeItem('whalevault_cache'); showToast('🗑️', 'Cache cleared', 'alert'); });
+    document.getElementById('clear-cache')?.addEventListener('click', () => { LiveData.cache = {}; localStorage.removeItem('mobidic_cache'); showToast('🗑️', 'Cache cleared', 'alert'); });
     document.getElementById('export-data')?.addEventListener('click', () => {
         const data = { alerts: state.alerts.slice(0, 50), filings: state.filings, tokens: state.tokens, timestamp: new Date().toISOString() };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'whalevault-export.json'; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mobidic-export.json'; a.click();
         showToast('📦', 'Data exported!', 'bull');
     });
 

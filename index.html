@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
 <meta name="theme-color" content="#0a0a0c" />
-<title>WhaleVault — Smart Money Intelligence</title>
+<title>Mobidic — Web3 Community Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -980,6 +980,98 @@
   .theme-toggle .ti{width:34px;height:34px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-size:16px;flex-shrink:0}
   .theme-toggle .tl{flex:1;font-weight:600;font-size:14px}
 
+  /* ============ COMMUNITY: PROJECTS ============ */
+  .project-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:12px;transition:transform .15s,border-color .2s;cursor:pointer}
+  .project-card:hover{transform:translateY(-2px);border-color:rgba(192,132,252,.4)}
+  .project-card .pc-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .project-card .pc-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+  .project-card .pc-icon.nft_art{background:linear-gradient(135deg,rgba(192,132,252,.2),rgba(255,107,157,.15));color:#c084fc}
+  .project-card .pc-icon.defi{background:rgba(46,204,113,.12);color:#2ecc71}
+  .project-card .pc-icon.dev_tool{background:rgba(78,163,255,.12);color:#4ea3ff}
+  .project-card .pc-icon.dao{background:rgba(251,146,60,.12);color:#fb923c}
+  .project-card .pc-icon.gamefi{background:rgba(255,107,157,.12);color:#ff6b9d}
+  .project-card .pc-icon.infrastructure{background:rgba(168,162,158,.12);color:#a8a29e}
+  .project-card .pc-name{font-weight:700;font-size:15px;letter-spacing:-0.01em}
+  .project-card .pc-cat{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+  .project-card .pc-desc{font-size:13.5px;color:var(--text-muted);line-height:1.5;margin-bottom:10px}
+  .project-card .pc-chain{display:inline-flex;align-items:center;gap:4px;font-size:11px;background:var(--surface-2);padding:3px 8px;border-radius:6px;color:var(--text-muted)}
+  .project-card .pc-footer{display:flex;align-items:center;gap:12px;margin-top:10px}
+  .project-card .pc-vote{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--green)}
+  .project-card .pc-links{display:flex;gap:8px;margin-left:auto}
+  .project-card .pc-links a{color:var(--text-muted);font-size:12px;text-decoration:none;padding:4px 8px;background:var(--surface-2);border-radius:6px;transition:color .15s}
+  .project-card .pc-links a:hover{color:#fff}
+  .project-card.featured{border-color:rgba(192,132,252,.3);background:linear-gradient(135deg,rgba(192,132,252,.04),rgba(6,182,212,.03))}
+  .project-card.featured::before{content:'⭐ FEATURED';display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#fb923c;margin-bottom:8px}
+
+  /* ============ COMMUNITY: STRATEGIES ============ */
+  .strat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:12px;transition:transform .15s,border-color .2s;cursor:pointer}
+  .strat-card:hover{transform:translateY(-2px);border-color:rgba(251,146,60,.4)}
+  .strat-card .sc-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .strat-card .sc-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#fb923c,#ff6b9d);display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+  .strat-card .sc-name{font-weight:700;font-size:15px;letter-spacing:-0.01em}
+  .strat-card .sc-user{font-size:12px;color:var(--text-muted)}
+  .strat-card .sc-thesis{font-size:13.5px;color:var(--text-muted);line-height:1.5;margin-bottom:10px;font-style:italic}
+  .strat-card .sc-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .strat-card .sc-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--surface-2);color:var(--text-muted)}
+  .strat-card .sc-tag.swing{color:#4ea3ff;background:rgba(78,163,255,.1)}
+  .strat-card .sc-tag.scalp{color:#fb923c;background:rgba(251,146,60,.1)}
+  .strat-card .sc-tag.dca{color:#2ecc71;background:rgba(46,204,113,.1)}
+  .strat-card .sc-tag.yield_farming{color:#c084fc;background:rgba(192,132,252,.1)}
+  .strat-card .sc-tag.nft_flipping{color:#ff6b9d;background:rgba(255,107,157,.1)}
+  .strat-card .sc-tag.arbitrage{color:#06b6d4;background:rgba(6,182,212,.1)}
+  .strat-card .sc-risk{font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600}
+  .strat-card .sc-risk.low{color:#2ecc71;background:rgba(46,204,113,.1)}
+  .strat-card .sc-risk.medium{color:#fb923c;background:rgba(251,146,60,.1)}
+  .strat-card .sc-risk.high{color:#ff4d6d;background:rgba(255,77,109,.1)}
+  .strat-card .sc-perf{display:flex;gap:16px;padding:10px 0;border-top:1px solid var(--border)}
+  .strat-card .sc-perf .sp{flex:1}
+  .strat-card .sc-perf .sp .l{font-size:11px;color:var(--text-muted)}
+  .strat-card .sc-perf .sp .v{font-size:14px;font-weight:700}
+  .strat-card .sc-perf .sp .v.up{color:var(--green)}
+  .strat-card .sc-perf .sp .v.dn{color:var(--red)}
+  .strat-card .sc-footer{display:flex;align-items:center;gap:12px;margin-top:8px}
+  .strat-card .sc-follow{font-size:12px;padding:6px 14px;border-radius:8px;font-weight:600;background:linear-gradient(135deg,#fb923c,#ff6b9d);color:#fff;border:none;cursor:pointer}
+  .strat-card .sc-followers{font-size:12px;color:var(--text-muted);margin-left:auto}
+
+  /* ============ COMMUNITY: PROFILE ============ */
+  .profile-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+  .profile-banner{height:90px;background:linear-gradient(135deg,#c084fc 0%,#06b6d4 50%,#fb923c 100%);position:relative}
+  .profile-info{padding:0 18px 18px;margin-top:-28px;position:relative}
+  .profile-avatar{width:56px;height:56px;border-radius:16px;background:var(--surface);border:3px solid var(--bg);display:grid;place-items:center;font-size:24px;margin-bottom:8px}
+  .profile-name{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.02em}
+  .profile-role{font-size:12px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+  .profile-bio{font-size:13.5px;color:var(--text-muted);line-height:1.5;margin-top:8px}
+  .profile-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .profile-badges .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+  .profile-badges .badge.artist{background:rgba(192,132,252,.12);color:#c084fc}
+  .profile-badges .badge.investor{background:rgba(46,204,113,.12);color:#2ecc71}
+  .profile-badges .badge.developer{background:rgba(78,163,255,.12);color:#4ea3ff}
+  .profile-badges .badge.analyst{background:rgba(251,146,60,.12);color:#fb923c}
+  .profile-badges .badge.whale{background:rgba(255,107,157,.12);color:#ff6b9d}
+  .profile-badges .badge.early_adopter{background:rgba(6,182,212,.12);color:#06b6d4}
+  .profile-stats-row{display:flex;gap:6px;margin-top:14px}
+  .profile-stats-row .ps{flex:1;text-align:center;padding:10px 6px;background:var(--surface-2);border-radius:10px}
+  .profile-stats-row .pv{font-size:16px;font-weight:800;font-family:var(--font-display)}
+  .profile-stats-row .pl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+  .profile-social{display:flex;gap:8px;margin-top:12px}
+  .profile-social a{padding:6px 12px;border-radius:8px;background:var(--surface-2);font-size:12px;color:var(--text-muted);text-decoration:none;font-weight:600;transition:color .15s,background .15s}
+  .profile-social a:hover{background:var(--surface);color:#fff}
+
+  /* ============ COMMUNITY: POST COMPOSER ============ */
+  .composer{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start}
+  .composer .c-av{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#c084fc,#06b6d4);display:grid;place-items:center;font-size:14px;flex-shrink:0}
+  .composer .c-input{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13.5px;color:#fff;font-family:var(--font-body);resize:none;min-height:38px;max-height:120px;outline:none;transition:border-color .2s}
+  .composer .c-input:focus{border-color:rgba(192,132,252,.4)}
+  .composer .c-input::placeholder{color:var(--text-muted)}
+  .composer .c-actions{display:flex;gap:6px;align-items:center;margin-top:6px}
+  .composer .c-post{padding:6px 16px;border-radius:8px;background:linear-gradient(135deg,#c084fc,#06b6d4);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer}
+
+  /* ============ COMMUNITY: REACTIONS ============ */
+  .reactions{display:flex;gap:6px;margin-top:8px}
+  .reactions button{padding:3px 10px;border-radius:14px;font-size:12px;background:var(--surface-2);border:1px solid transparent;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:3px;color:var(--text-muted)}
+  .reactions button:hover{border-color:rgba(192,132,252,.3)}
+  .reactions button.active{border-color:rgba(192,132,252,.5);background:rgba(192,132,252,.1);color:#c084fc}
+
 </style>
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" async></script>
@@ -990,8 +1082,8 @@
 <div class="auth-modal" id="authModal">
   <div class="auth-card">
     <div class="logo">🐋</div>
-    <h2>Welcome to WhaleVault</h2>
-    <div class="sub">Sign in to sync your watchlist, alerts, and portfolio across all devices.</div>
+    <h2>Welcome to Mobidic</h2>
+    <div class="sub">Join the Web3 community. Share projects, strategies & track whale movements.</div>
     
     <button class="auth-btn google" id="authGoogle">
       <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -1023,8 +1115,8 @@
     <rect x="96" y="40" width="10" height="40" rx="5" fill="url(#gS)"/>
     <path d="M54 38 L60 28 L66 38 L66 62 C66 70 60 76 60 76 C60 76 54 70 54 62 Z" fill="url(#gS)"/>
   </svg>
-  <div class="brand-text">WHALEVAULT</div>
-  <div class="status" id="splashStatus">Connecting to markets…</div>
+  <div class="brand-text">MOBIDIC</div>
+  <div class="status" id="splashStatus">Loading the community…</div>
 </div>
 <script>
 /* Failsafe: force-dismiss splash after 2s regardless of other JS */
@@ -1055,7 +1147,7 @@
         <g fill="url(#gM)"><rect x="4" y="9" width="3" height="14" rx="1.4"/><rect x="25" y="9" width="3" height="14" rx="1.4"/>
         <path d="M11 6c2-1 5-1 7 0 3 1.4 5 4.5 5 8 0 5-4 9-9 9s-9-4-9-9c0-2.6 1-4.6 2.5-6 .5-.4 1.7-1.2 3.5-2z"/></g>
       </svg>
-      <span id="modeLbl">Whale Mode</span>
+      <span id="modeLbl">Mobidic</span>
       <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
 
@@ -1303,6 +1395,87 @@
     </div>
   </section>
 
+  <!-- PROJECTS -->
+  <section class="screen" id="screen-projects">
+    <div class="section">
+      <div class="h-row"><h2>Projects</h2></div>
+      <div class="muted" style="margin-bottom:14px;font-size:13px">Discover NFT collections, DeFi protocols & dev tools from the community.</div>
+
+      <div class="chips" id="projCatChips">
+        <button class="chip on" data-cat="all">All</button>
+        <button class="chip" data-cat="nft_art">🎨 NFT Art</button>
+        <button class="chip" data-cat="defi">💰 DeFi</button>
+        <button class="chip" data-cat="dev_tool">🛠️ Dev Tool</button>
+        <button class="chip" data-cat="dao">🏛️ DAO</button>
+        <button class="chip" data-cat="gamefi">🎮 GameFi</button>
+      </div>
+
+      <div id="projectsList" style="margin-top:14px"></div>
+
+      <button class="drawer-cta" id="submitProjectBtn" style="margin-top:18px;background:linear-gradient(135deg,#c084fc,#06b6d4)">+ Submit a Project</button>
+    </div>
+  </section>
+
+  <!-- STRATEGIES -->
+  <section class="screen" id="screen-strategies">
+    <div class="section">
+      <div class="h-row"><h2>Strategies</h2></div>
+      <div class="muted" style="margin-bottom:14px;font-size:13px">Trading strategies shared by the community. Learn, copy & share.</div>
+
+      <div class="chips" id="stratCatChips">
+        <button class="chip on" data-scat="all">All</button>
+        <button class="chip" data-scat="swing">📈 Swing</button>
+        <button class="chip" data-scat="scalp">⚡ Scalp</button>
+        <button class="chip" data-scat="dca">🔄 DCA</button>
+        <button class="chip" data-scat="yield_farming">🌾 Yield</button>
+        <button class="chip" data-scat="nft_flipping">🖼️ NFT Flip</button>
+      </div>
+
+      <div class="seg" id="stratSortSeg" style="margin-top:10px">
+        <button class="on" data-ssort="pnl">🔥 Top P&L</button>
+        <button data-ssort="followers">👥 Most Followed</button>
+        <button data-ssort="newest">🆕 Newest</button>
+      </div>
+
+      <div id="strategiesList" style="margin-top:14px"></div>
+
+      <button class="drawer-cta" id="shareStrategyBtn" style="margin-top:18px;background:linear-gradient(135deg,#fb923c,#ff6b9d)">+ Share a Strategy</button>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section class="screen" id="screen-profile">
+    <div class="section">
+      <div class="profile-hero" id="profileHero">
+        <div class="profile-banner"></div>
+        <div class="profile-info">
+          <div class="profile-avatar" id="profileAvatar">🐋</div>
+          <div class="profile-name" id="profileName">Guest User</div>
+          <div class="profile-role" id="profileRole">Web3 Explorer</div>
+          <div class="profile-bio" id="profileBio">Welcome to Mobidic! Sign in to set up your profile.</div>
+          <div class="profile-badges" id="profileBadges"></div>
+          <div class="profile-stats-row">
+            <div class="ps"><div class="pv" id="profFollowers">0</div><div class="pl">Followers</div></div>
+            <div class="ps"><div class="pv" id="profFollowing">0</div><div class="pl">Following</div></div>
+            <div class="ps"><div class="pv" id="profReputation">0</div><div class="pl">Reputation</div></div>
+            <div class="ps"><div class="pv" id="profProjects">0</div><div class="pl">Projects</div></div>
+          </div>
+          <div class="profile-social" id="profileSocial"></div>
+          <button class="drawer-cta" id="editProfileBtn" style="margin-top:12px">Edit Profile</button>
+        </div>
+      </div>
+
+      <div class="sec-title lg" style="margin-top:22px">📊 My Strategies</div>
+      <div id="profileStrategies"></div>
+
+      <div class="sec-title lg" style="margin-top:22px">🎨 My Projects</div>
+      <div id="profileProjects"></div>
+
+      <div class="sec-title lg" style="margin-top:22px">⭐ Watchlist</div>
+      <div id="profileWatchlist"></div>
+    </div>
+  </section>
+
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1310,23 +1483,23 @@
   <div class="bnav-inner">
     <button class="tab active" data-tab="home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7h-6v7H5a2 2 0 0 1-2-2z"/></svg>
-      <span class="lbl">Home</span>
+      <span class="lbl">Feed</span>
     </button>
     <button class="tab" data-tab="markets">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
       <span class="lbl">Markets</span>
     </button>
-    <button class="tab" data-tab="alerts">
+    <button class="tab" data-tab="projects">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="lbl">Projects</span>
+    </button>
+    <button class="tab" data-tab="strategies">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2-1 4 1 4 1l3-9 4 18 3-10 2 4h6"/></svg>
-      <span class="lbl">Alerts</span>
+      <span class="lbl">Strategies</span>
     </button>
-    <button class="tab" data-tab="wallets">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h15a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7z"/><path d="M3 7c0-2 2-3 3-3h11"/><circle cx="17" cy="14" r="1.5"/></svg>
-      <span class="lbl">Wallets</span>
-    </button>
-    <button class="tab" data-tab="leaderboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M17 4h4v3a4 4 0 0 1-4 4M7 4H3v3a4 4 0 0 0 4 4M17 4H7v6a5 5 0 0 0 10 0V4z"/></svg>
-      <span class="lbl">Whales</span>
+    <button class="tab" data-tab="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M3 21c0-4 4-7 9-7s9 3 9 7"/></svg>
+      <span class="lbl">Profile</span>
     </button>
   </div>
 </nav>
@@ -1430,13 +1603,13 @@
   <div class="menu-card">
     <div class="menu-row"><span class="mi">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      </span><span class="mn">WhaleVault v9.0</span><span class="mr">Mobile</span></div>
+      </span><span class="mn">Mobidic v11.0</span><span class="mr">Mobile</span></div>
     <a class="menu-row" href="https://github.com/gustavglobalb-boop/whale-tracker" target="_blank" rel="noopener"><span class="mi">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.97.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.78 0c2.21-1.49 3.18-1.18 3.18-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.41-5.26 5.69.41.36.78 1.06.78 2.13v3.16c0 .31.21.68.79.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
       </span><span class="mn">View on GitHub</span><span class="mc">↗</span></a>
   </div>
 
-  <div style="margin-top:22px;text-align:center" class="muted"><small>Smart money intelligence · Built for serious traders</small></div>
+  <div style="margin-top:22px;text-align:center" class="muted"><small>Web3 community · Built for creators, investors & developers</small></div>
 </aside>
 
 <!-- MODE MODAL -->
@@ -1527,8 +1700,8 @@
 <div class="onb-back" id="onbBack"></div>
 <div class="onb" id="onb">
   <div class="prog" id="onbProg"><span class="on"></span><span></span><span></span></div>
-  <h3 id="onbTitle">Welcome to WhaleVault</h3>
-  <p id="onbBody">Track institutional flows across gold, oil, equities, indices, and crypto — all in one place.</p>
+  <h3 id="onbTitle">Welcome to Mobidic</h3>
+  <p id="onbBody">The Web3 community for artists, investors & developers. Share projects, strategies and track whale movements.</p>
   <div class="illustration" id="onbIllu">🐋</div>
   <div class="actions">
     <button class="skip" id="onbSkip">Skip</button>
@@ -1739,7 +1912,7 @@ const NOTIFS = [
 ];
 
 const ONB_STEPS = [
-  { t:'Welcome to WhaleVault', b:'Track institutional flows across gold, oil, equities, indices, and crypto — all in one place.', i:'🐋' },
+  { t:'Welcome to Mobidic', b:'The Web3 community for artists, investors & developers. Share projects, strategies and track whale movements.', i:'🐋' },
   { t:'Connect your data',     b:'Link CoinGecko + Etherscan to get real-time prices and on-chain whale movements.', i:'🔌' },
   { t:'Get notified',          b:'Set your threshold and get alerts only when the big money actually moves.',        i:'🔔' },
 ];
@@ -1753,7 +1926,7 @@ const state = {
   watchlist: new Set(['BTC','NVDA','XAU']),
   trackedWallets: new Set(['bin-cold']),
   notifications: [...NOTIFS],
-  mode: 'Whale Mode',
+  mode: 'Mobidic',
   threshold: 1_000_000,
   onbStep: 0,
   toggles: { notif:true, refresh:true, ticker:true },
@@ -2380,7 +2553,10 @@ function setTab(tab){
   if(fab) fab.classList.toggle('on', tab==='alerts');
   if(tab==='markets')      { renderMarkets(); setTimeout(applyHotEdges, 100); }
   if(tab==='leaderboard')  { renderLeaderboard(); renderCohort(); renderSocial(); }
-  if(tab==='home')         { renderPulseDial(); }
+  if(tab==='home')         { renderPulseDial(); renderCommunityFeed(); }
+  if(tab==='projects')     { renderProjects(); }
+  if(tab==='strategies')   { renderStrategies(); }
+  if(tab==='profile')      { renderProfile(); }
 }
 
 /* ============ OVERLAYS ============ */
@@ -2468,7 +2644,7 @@ function closeOnb(){
   $('#onbBack').classList.remove('on'); $('#onb').classList.remove('on');
   $('#onboardBanner').classList.add('done');
   $('#onboardBanner h3').textContent='✅ All set';
-  $('#onboardBanner p').textContent='You are ready to track institutional flows in real time.';
+  $('#onboardBanner p').textContent='You are ready to explore the Web3 community.';
 }
 function renderOnb(){
   const step=ONB_STEPS[state.onbStep];
@@ -2490,7 +2666,7 @@ const LiveData = {
   indexMultiplier: { 'SPX':10.1,'DJI':97.5,'NDX':49.0,'DAX':625,'FTSE':274,'NI225':530 },
   cache: {}, CACHE_TTL: 30000, isLive: false,
   getApiKey() {
-    try { return JSON.parse(localStorage.getItem('wv_api_keys')||'{}').finnhub || ''; }
+    try { return JSON.parse(localStorage.getItem('mobidic_api_keys')||'{}').finnhub || ''; }
     catch { return ''; }
   },
   async fetchQuote(sym) {
@@ -2877,11 +3053,11 @@ function renderWalletNetwork(centerId, containerEl){
 
 /* ============ V3 · COMMAND PALETTE EXTENSIONS ============ */
 const COMMANDS = [
-  { id:'nav-home',    label:'Go to Home',        icon:'🏠', kbd:'G H', run:()=>setTab('home') },
+  { id:'nav-home',    label:'Go to Feed',        icon:'🏠', kbd:'G H', run:()=>setTab('home') },
   { id:'nav-markets', label:'Go to Markets',     icon:'📊', kbd:'G M', run:()=>setTab('markets') },
-  { id:'nav-alerts',  label:'Go to Alerts',      icon:'🔔', kbd:'G A', run:()=>setTab('alerts') },
-  { id:'nav-wallets', label:'Go to Wallets',     icon:'💼', kbd:'G W', run:()=>setTab('wallets') },
-  { id:'nav-whales',  label:'Go to Leaderboard', icon:'🏆', kbd:'G L', run:()=>setTab('leaderboard') },
+  { id:'nav-projects',label:'Go to Projects',    icon:'📦', kbd:'G P', run:()=>setTab('projects') },
+  { id:'nav-strats',  label:'Go to Strategies',  icon:'📈', kbd:'G S', run:()=>setTab('strategies') },
+  { id:'nav-profile', label:'Go to Profile',     icon:'👤', kbd:'G R', run:()=>setTab('profile') },
   { id:'act-create',  label:'Create custom alert',  icon:'➕', run:()=>{ setTab('alerts'); setTimeout(openCreator,250) } },
   { id:'act-thr-1m',  label:'Set threshold to $1M', icon:'⚡', run:()=>{ state.threshold=1e6; toast('Threshold: $1M','ok') } },
   { id:'act-thr-5m',  label:'Set threshold to $5M', icon:'⚡', run:()=>{ state.threshold=5e6; toast('Threshold: $5M','ok') } },
@@ -2911,6 +3087,220 @@ if(document.readyState === 'loading'){
   return;
 }
 
+/* ============ COMMUNITY DATA ============ */
+const PROJECTS_DATA = [
+  { id:'p1', name:'Bored Apes Yacht Club', cat:'nft_art', desc:'10,000 unique digital collectibles living on the Ethereum blockchain. Community-driven art project with utility and exclusive events.', chain:'Ethereum', website:'https://boredapeyachtclub.com', github:'', upvotes:842, featured:true, user:'0xBAYC', icon:'🎨' },
+  { id:'p2', name:'Uniswap V4', cat:'defi', desc:'The leading decentralized exchange protocol. V4 introduces hooks for customizable pool logic, enabling composable DeFi primitives.', chain:'Ethereum', website:'https://uniswap.org', github:'https://github.com/Uniswap', upvotes:1247, featured:true, user:'Hayden', icon:'🦄' },
+  { id:'p3', name:'Hardhat Framework', cat:'dev_tool', desc:'Ethereum development environment for professionals. Compile, deploy, test, and debug your smart contracts with ease.', chain:'Multi-chain', website:'https://hardhat.org', github:'https://github.com/NomicFoundation/hardhat', upvotes:934, featured:false, user:'NomicLabs', icon:'🛠️' },
+  { id:'p4', name:'MakerDAO', cat:'dao', desc:'Decentralized governance community managing the DAI stablecoin and the Maker Protocol on the Ethereum blockchain.', chain:'Ethereum', website:'https://makerdao.com', github:'https://github.com/makerdao', upvotes:712, featured:false, user:'MakerDAO', icon:'🏛️' },
+  { id:'p5', name:'Axie Infinity', cat:'gamefi', desc:'Play-to-earn game universe where players battle, breed, and trade fantasy creatures called Axies as NFTs.', chain:'Ronin', website:'https://axieinfinity.com', github:'', upvotes:528, featured:false, user:'SkyMavis', icon:'🎮' },
+  { id:'p6', name:'Jupiter Exchange', cat:'defi', desc:'Leading DEX aggregator on Solana. Offering the best swap rates, limit orders, DCA and perpetuals.', chain:'Solana', website:'https://jup.ag', github:'https://github.com/jup-ag', upvotes:673, featured:false, user:'Meow', icon:'🪐' },
+  { id:'p7', name:'Art Blocks', cat:'nft_art', desc:'Generative art platform where unique algorithmic artwork is minted on-chain. Home to Fidenzas, Chromie Squiggles, and more.', chain:'Ethereum', website:'https://artblocks.io', github:'', upvotes:461, featured:false, user:'SnowFro', icon:'🎭' },
+  { id:'p8', name:'Foundry', cat:'dev_tool', desc:'Blazing fast, portable, modular toolkit for Ethereum app development written in Rust. Used by top protocols.', chain:'Multi-chain', website:'https://getfoundry.sh', github:'https://github.com/foundry-rs', upvotes:889, featured:false, user:'Paradigm', icon:'⚒️' },
+];
+
+const STRATEGIES_DATA = [
+  { id:'s1', name:'BTC Accumulation DCA', cat:'dca', user:'whale_hunter', thesis:'Dollar-cost averaging into BTC weekly, regardless of price action. The macro thesis is simple: Bitcoin is digital gold and adoption is still early.', assets:['BTC'], timeframe:'Weekly', risk:'low', pnl30:12.4, pnl90:28.7, followers:342 },
+  { id:'s2', name:'SOL Momentum Swing', cat:'swing', user:'solana_chad', thesis:'Ride the SOL/USDT momentum on 4H chart. Enter on breakouts above key resistance with 2R minimum targets.', assets:['SOL','JUP'], timeframe:'4H-Daily', risk:'medium', pnl30:18.6, pnl90:42.1, followers:217 },
+  { id:'s3', name:'ETH Yield Maximizer', cat:'yield_farming', user:'defi_degen', thesis:'Rotate capital between top Ethereum yield protocols (Aave, Lido, EigenLayer) to maximize risk-adjusted yield.', assets:['ETH','stETH'], timeframe:'Weekly', risk:'medium', pnl30:4.8, pnl90:14.2, followers:189 },
+  { id:'s4', name:'NFT Blue-Chip Flip', cat:'nft_flipping', user:'nft_sniper', thesis:'Monitor whale wallets and sweep floors of blue-chip NFTs when they dip 30%+ from ATH. Flip on recovery.', assets:['BAYC','Pudgy','Azuki'], timeframe:'Daily', risk:'high', pnl30:-8.2, pnl90:34.6, followers:156 },
+  { id:'s5', name:'Altcoin Scalper', cat:'scalp', user:'1min_king', thesis:'Quick 1-3% scalps on high-volume altcoins during US market hours. Strict stop-losses and max 3 trades per day.', assets:['SOL','AVAX','LINK'], timeframe:'1m-5m', risk:'high', pnl30:22.1, pnl90:51.8, followers:423 },
+  { id:'s6', name:'Cross-DEX Arbitrage', cat:'arbitrage', user:'arb_bot_42', thesis:'Automated arbitrage between Uniswap, Sushiswap, and Curve pools. Captures pricing inefficiencies in real-time.', assets:['Multi'], timeframe:'Continuous', risk:'low', pnl30:3.2, pnl90:9.8, followers:98 },
+];
+
+const COMMUNITY_POSTS_DATA = [
+  { id:'cp1', user:'whale_hunter', avatar:'WH', content:'Just spotted a massive BTC accumulation pattern forming on the weekly. Institutions are loading up while retail is sleeping. This is the calm before the storm. 🐋💎', tags:['#BTC','#WhaleAlert'], reactions:{fire:124,whale:89,diamond:201,rocket:67}, comments:34, time:'2h ago' },
+  { id:'cp2', user:'nft_sniper', avatar:'NS', content:'New generative art drop on Art Blocks this Friday. The algorithm creates unique ocean-depth visuals — perfect for the Mobidic community! 🎨🌊', tags:['#NFT','#ArtBlocks'], reactions:{fire:56,whale:12,diamond:34,rocket:89}, comments:18, time:'4h ago' },
+  { id:'cp3', user:'defi_degen', avatar:'DD', content:'Yield farming update: Moved 80% of my ETH position from Lido to EigenLayer restaking. The risk-adjusted returns are significantly better right now. Full analysis thread below 👇', tags:['#DeFi','#Yield','#ETH'], reactions:{fire:201,whale:45,diamond:156,rocket:23}, comments:67, time:'6h ago' },
+  { id:'cp4', user:'solana_chad', avatar:'SC', content:'SOL just broke through $185 resistance with massive volume. My swing trade from $172 is printing. Taking 50% profit here, letting the rest ride with trailing stop at $180. 📈', tags:['#SOL','#Trading'], reactions:{fire:312,whale:78,diamond:89,rocket:245}, comments:52, time:'8h ago' },
+  { id:'cp5', user:'1min_king', avatar:'1K', content:'Today\'s scalping session: 5/5 wins, +4.2% on the day. The key was waiting for the US open volatility spike on AVAX. Patience pays. ⚡', tags:['#Scalping','#AVAX'], reactions:{fire:89,whale:23,diamond:45,rocket:12}, comments:21, time:'12h ago' },
+];
+
+/* ============ COMMUNITY RENDERERS ============ */
+const communityState = { projCat:'all', stratCat:'all', stratSort:'pnl' };
+
+function renderProjects(){
+  let list = PROJECTS_DATA;
+  if(communityState.projCat!=='all') list = list.filter(p=>p.cat===communityState.projCat);
+  const catLabels = {nft_art:'NFT Art',defi:'DeFi',dev_tool:'Dev Tool',dao:'DAO',gamefi:'GameFi',infrastructure:'Infra'};
+  const catIcons = {nft_art:'🎨',defi:'💰',dev_tool:'🛠️',dao:'🏛️',gamefi:'🎮',infrastructure:'⚙️'};
+
+  if(!list.length){
+    $('#projectsList').innerHTML = `<div class="empty"><div class="em-ico">📦</div>No projects in this category yet.</div>`;
+    return;
+  }
+
+  $('#projectsList').innerHTML = list.map(p=>`
+    <div class="project-card ${p.featured?'featured':''}">
+      <div class="pc-top">
+        <div class="pc-icon ${p.cat}">${p.icon||catIcons[p.cat]||'📦'}</div>
+        <div style="flex:1">
+          <div class="pc-name">${p.name}</div>
+          <div class="pc-cat">${catLabels[p.cat]||p.cat} · by ${p.user}</div>
+        </div>
+      </div>
+      <div class="pc-desc">${p.desc}</div>
+      <span class="pc-chain">⛓️ ${p.chain}</span>
+      <div class="pc-footer">
+        <div class="pc-vote" onclick="event.stopPropagation();upvoteProject('${p.id}')">▲ ${p.upvotes}</div>
+        <div class="pc-links">
+          ${p.website?`<a href="${p.website}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🌐 Site</a>`:''}
+          ${p.github?`<a href="${p.github}" target="_blank" rel="noopener" onclick="event.stopPropagation()">💻 GitHub</a>`:''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function upvoteProject(id){
+  const p = PROJECTS_DATA.find(x=>x.id===id);
+  if(p){ p.upvotes++; renderProjects(); toast('Upvoted!','ok'); }
+}
+window.upvoteProject = upvoteProject;
+
+function renderStrategies(){
+  let list = [...STRATEGIES_DATA];
+  if(communityState.stratCat!=='all') list = list.filter(s=>s.cat===communityState.stratCat);
+  if(communityState.stratSort==='pnl') list.sort((a,b)=>b.pnl90-a.pnl90);
+  else if(communityState.stratSort==='followers') list.sort((a,b)=>b.followers-a.followers);
+
+  const catLabels = {swing:'Swing',scalp:'Scalp',dca:'DCA',yield_farming:'Yield Farming',nft_flipping:'NFT Flipping',arbitrage:'Arbitrage'};
+
+  if(!list.length){
+    $('#strategiesList').innerHTML = `<div class="empty"><div class="em-ico">📊</div>No strategies in this category yet.</div>`;
+    return;
+  }
+
+  $('#strategiesList').innerHTML = list.map(s=>`
+    <div class="strat-card">
+      <div class="sc-top">
+        <div class="sc-avatar">${s.user.slice(0,2).toUpperCase()}</div>
+        <div style="flex:1">
+          <div class="sc-name">${s.name}</div>
+          <div class="sc-user">by @${s.user} · ${s.timeframe}</div>
+        </div>
+      </div>
+      <div class="sc-thesis">"${s.thesis}"</div>
+      <div class="sc-meta">
+        <span class="sc-tag ${s.cat}">${catLabels[s.cat]||s.cat}</span>
+        <span class="sc-risk ${s.risk}">${s.risk.toUpperCase()} RISK</span>
+        ${s.assets.map(a=>`<span class="sc-tag">${a}</span>`).join('')}
+      </div>
+      <div class="sc-perf">
+        <div class="sp"><div class="l">30d P&L</div><div class="v ${s.pnl30>=0?'up':'dn'}">${s.pnl30>=0?'+':''}${s.pnl30}%</div></div>
+        <div class="sp"><div class="l">90d P&L</div><div class="v ${s.pnl90>=0?'up':'dn'}">${s.pnl90>=0?'+':''}${s.pnl90}%</div></div>
+        <div class="sp"><div class="l">Followers</div><div class="v">${s.followers}</div></div>
+      </div>
+      <div class="sc-footer">
+        <button class="sc-follow" onclick="event.stopPropagation();followStrategy('${s.id}')">Follow</button>
+        <span class="sc-followers">${s.followers} following this strategy</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function followStrategy(id){
+  const s = STRATEGIES_DATA.find(x=>x.id===id);
+  if(s){ s.followers++; renderStrategies(); toast('Now following this strategy','ok'); }
+}
+window.followStrategy = followStrategy;
+
+function renderCommunityFeed(){
+  const composer = `<div class="composer">
+    <div class="c-av">🐋</div>
+    <div style="flex:1">
+      <textarea class="c-input" id="postInput" placeholder="What's happening in Web3? Share your alpha..."></textarea>
+      <div class="c-actions">
+        <button class="c-post" id="postBtn">Post</button>
+      </div>
+    </div>
+  </div>`;
+
+  const posts = COMMUNITY_POSTS_DATA.map(p=>`
+    <div class="post" style="margin-bottom:12px">
+      <div class="pav">${p.avatar}</div>
+      <div class="content">
+        <div class="hd"><span class="u">@${p.user}</span><span class="su">· ${p.time}</span></div>
+        <div class="bd">${p.content}</div>
+        <div class="tags" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${p.tags.map(t=>`<span style="font-size:11px;color:#c084fc">${t}</span>`).join('')}</div>
+        <div class="reactions">
+          <button onclick="reactPost('${p.id}','fire')">🔥 ${p.reactions.fire}</button>
+          <button onclick="reactPost('${p.id}','whale')">🐋 ${p.reactions.whale}</button>
+          <button onclick="reactPost('${p.id}','diamond')">💎 ${p.reactions.diamond}</button>
+          <button onclick="reactPost('${p.id}','rocket')">🚀 ${p.reactions.rocket}</button>
+          <button style="margin-left:auto">💬 ${p.comments}</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Insert composer before the existing social feed on the home/feed screen
+  const socialFeed = $('#socialFeed');
+  if(socialFeed) socialFeed.innerHTML = composer + posts;
+
+  // Wire post button
+  setTimeout(()=>{
+    $('#postBtn')?.addEventListener('click',()=>{
+      const input = $('#postInput');
+      const text = input?.value?.trim();
+      if(!text){ toast('Write something first!','err'); return; }
+      COMMUNITY_POSTS_DATA.unshift({
+        id:'cp'+Date.now(), user:'you', avatar:'YO',
+        content:text, tags:[], reactions:{fire:0,whale:0,diamond:0,rocket:0},
+        comments:0, time:'Just now'
+      });
+      input.value='';
+      renderCommunityFeed();
+      toast('Posted to the community! 🐋','ok');
+    });
+  },50);
+}
+
+function reactPost(id, type){
+  const p = COMMUNITY_POSTS_DATA.find(x=>x.id===id);
+  if(p){ p.reactions[type]++; renderCommunityFeed(); }
+}
+window.reactPost = reactPost;
+
+function renderProfile(){
+  const badges = [
+    {type:'whale',label:'🐋 Whale'},
+    {type:'investor',label:'💰 Investor'},
+    {type:'early_adopter',label:'⚡ Early Adopter'},
+  ];
+  $('#profileBadges').innerHTML = badges.map(b=>`<span class="badge ${b.type}">${b.label}</span>`).join('');
+
+  const socialLinks = [
+    {label:'𝕏 Twitter',url:'#'},
+    {label:'💬 Discord',url:'#'},
+    {label:'💻 GitHub',url:'#'},
+  ];
+  $('#profileSocial').innerHTML = socialLinks.map(l=>`<a href="${l.url}">${l.label}</a>`).join('');
+
+  // Profile strategies
+  const myStrats = STRATEGIES_DATA.slice(0,2);
+  $('#profileStrategies').innerHTML = myStrats.length
+    ? myStrats.map(s=>`<div class="strat-card" style="margin-bottom:8px">
+        <div class="sc-top"><div class="sc-avatar">${s.user.slice(0,2).toUpperCase()}</div><div style="flex:1"><div class="sc-name">${s.name}</div><div class="sc-user">${s.cat} · ${s.pnl90>=0?'+':''}${s.pnl90}% (90d)</div></div></div>
+      </div>`).join('')
+    : `<div class="empty"><div class="em-ico">📊</div>No strategies shared yet.</div>`;
+
+  // Profile projects
+  const myProjects = PROJECTS_DATA.slice(0,2);
+  $('#profileProjects').innerHTML = myProjects.length
+    ? myProjects.map(p=>`<div class="project-card" style="margin-bottom:8px">
+        <div class="pc-top"><div class="pc-icon ${p.cat}">${p.icon||'📦'}</div><div style="flex:1"><div class="pc-name">${p.name}</div><div class="pc-cat">${p.cat}</div></div></div>
+      </div>`).join('')
+    : `<div class="empty"><div class="em-ico">🎨</div>No projects submitted yet.</div>`;
+
+  // Profile watchlist
+  const wlItems = ASSETS.filter(a=>state.watchlist.has(a.sym));
+  $('#profileWatchlist').innerHTML = wlItems.length
+    ? wlItems.map(assetRowHtml).join('')
+    : `<div class="empty"><div class="em-ico">⭐</div>No assets in watchlist.</div>`;
+  wireAssetRows('#profileWatchlist');
+}
+
   /* splash dismiss — FIRST, before any event listeners */
   const _splashEl = document.getElementById('splash');
   if(_splashEl){
@@ -2933,6 +3323,12 @@ if(document.readyState === 'loading'){
   /* V3 — new inits */
   renderPulseDial();
   buildFlowTape();
+
+  /* V11 — community screens */
+  renderProjects();
+  renderStrategies();
+  renderCommunityFeed();
+  renderProfile();
 
   /* Flip counter on P&L hero */
   const pnlEl = $('#pnlValue');
@@ -2973,7 +3369,7 @@ if(document.readyState === 'loading'){
     closePaper();
     toast('Added to paper portfolio 📝', 'ok');
   });
-  } catch(e){ console.warn('[WV] Creator/paper init error:', e); }
+  } catch(e){ console.warn('[Mobidic] Creator/paper init error:', e); }
 
   /* Long-press menus on asset rows */
   function attachAllLongPress(){
@@ -3099,8 +3495,40 @@ if(document.readyState === 'loading'){
       c.classList.add('on');
       state.leader.sort=c.dataset.sort;
       renderLeaderboard();
+  });
+
+  /* projects chips */
+  $$('#projCatChips .chip').forEach(c=>{
+    c.addEventListener('click',()=>{
+      $$('#projCatChips .chip').forEach(x=> x.classList.remove('on'));
+      c.classList.add('on');
+      communityState.projCat=c.dataset.cat;
+      renderProjects();
     });
   });
+
+  /* strategies chips */
+  $$('#stratCatChips .chip').forEach(c=>{
+    c.addEventListener('click',()=>{
+      $$('#stratCatChips .chip').forEach(x=> x.classList.remove('on'));
+      c.classList.add('on');
+      communityState.stratCat=c.dataset.scat;
+      renderStrategies();
+    });
+  });
+  $$('#stratSortSeg button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      $$('#stratSortSeg button').forEach(x=> x.classList.remove('on'));
+      b.classList.add('on');
+      communityState.stratSort=b.dataset.ssort;
+      renderStrategies();
+    });
+  });
+
+  /* community CTAs */
+  $('#submitProjectBtn')?.addEventListener('click',()=>{ toast('Project submission \u2014 coming soon! \ud83d\ude80','ok'); });
+  $('#shareStrategyBtn')?.addEventListener('click',()=>{ toast('Strategy sharing \u2014 coming soon! \ud83d\udcc8','ok'); });
+  $('#editProfileBtn')?.addEventListener('click',()=>{ toast('Profile editor \u2014 coming soon! \u270f\ufe0f','ok'); });
 
   /* track buttons */
   $('#trackBtn')?.addEventListener('click',()=>{
@@ -3119,7 +3547,7 @@ if(document.readyState === 'loading'){
   /* drawer actions */
   $('#qSupport')?.addEventListener('click',()=>{ closeDrawer(); toast('Opening live support…','ok') });
   $('#qBook')?.addEventListener('click',()=>{ closeDrawer(); toast('Opening booking calendar…','ok') });
-  $('#upgradeBtn')?.addEventListener('click',()=>{ closeDrawer(); toast('WhaleVault Plus — coming soon','ok') });
+  $('#upgradeBtn')?.addEventListener('click',()=>{ closeDrawer(); toast('Mobidic Plus — coming soon','ok') });
 
   /* toggles */
   $$('.tog').forEach(t=>{
@@ -3146,7 +3574,7 @@ if(document.readyState === 'loading'){
 
   /* Swipe gesture for tab navigation */
   let touchStartX=0, touchStartY=0;
-  const TABS=['home','markets','alerts','wallets','leaderboard'];
+  const TABS=['home','markets','projects','strategies','profile'];
   document.addEventListener('touchstart', e=>{
     touchStartX=e.touches[0].clientX;
     touchStartY=e.touches[0].clientY;
@@ -3236,7 +3664,7 @@ if(document.readyState === 'loading'){
 
 /* ============ THEME TOGGLE ============ */
 (function initTheme(){
-  const saved = localStorage.getItem('wv_theme') || 'dark';
+  const saved = localStorage.getItem('mobidic_theme') || 'dark';
   if(saved==='light') document.documentElement.setAttribute('data-theme','light');
   updateThemeUI();
   
@@ -3249,10 +3677,10 @@ function toggleTheme(){
   const isLight = document.documentElement.getAttribute('data-theme')==='light';
   if(isLight){
     document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('wv_theme','dark');
+    localStorage.setItem('mobidic_theme','dark');
   } else {
     document.documentElement.setAttribute('data-theme','light');
-    localStorage.setItem('wv_theme','light');
+    localStorage.setItem('mobidic_theme','light');
   }
   updateThemeUI();
   setTimeout(()=>document.documentElement.classList.remove('theme-transitioning'),500);
@@ -3363,7 +3791,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
 
 </script>
 
-<!-- ═══ WhaleVault Auth + Real-Time Engine ═══ -->
+<!-- ═══ Mobidic Auth + Real-Time Engine ═══ -->
 <script>
 (function(){
   var WV = window.WV = window.WV || {};
@@ -3408,7 +3836,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
       // Connect WebSocket
       connectWS();
     } catch(e) {
-      console.warn('[WV] Boot error:', e);
+      console.warn('[Mobidic] Boot error:', e);
       showGuestMode();
     }
   }
@@ -3463,7 +3891,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
 
   // ── Auth UI ──
   function showAuthPrompt() {
-    if (!localStorage.getItem('wv_guest')) {
+    if (!localStorage.getItem('mobidic_guest')) {
       openAuthModal();
     } else {
       showGuestMode();
@@ -3505,7 +3933,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
   });
 
   if (guestBtn) guestBtn.addEventListener('click', function() {
-    localStorage.setItem('wv_guest', '1');
+    localStorage.setItem('mobidic_guest', '1');
     closeAuthModal();
   });
 
@@ -3551,7 +3979,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
         }
       }
     } catch(e) {
-      console.warn('[WV] Cloud sync error:', e);
+      console.warn('[Mobidic] Cloud sync error:', e);
     }
   }
 
@@ -3567,7 +3995,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol: symbol })
       });
-    } catch(e) { console.warn('[WV] Watchlist sync error:', e); }
+    } catch(e) { console.warn('[Mobidic] Watchlist sync error:', e); }
   };
 
   WV.syncWatchlistRemove = async function(symbol) {
@@ -3580,7 +4008,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }
       });
-    } catch(e) { console.warn('[WV] Watchlist sync error:', e); }
+    } catch(e) { console.warn('[Mobidic] Watchlist sync error:', e); }
   };
 
   // ── WebSocket Real-Time Prices ──
@@ -3596,7 +4024,7 @@ if (typeof window !== 'undefined') window.flashCell = flashCellEnhanced;
             handlePriceUpdate(msg.data);
           }
           if (msg.type === 'connected') {
-            console.log('[WV] WebSocket connected, ' + msg.clients + ' clients');
+            console.log('[Mobidic] WebSocket connected, ' + msg.clients + ' clients');
           }
         } catch(e) {}
       };

@@ -1,7 +1,7 @@
 {
-  "name": "whalevault",
-  "version": "9.0.0",
-  "description": "WhaleVault — Institutional Intelligence Terminal with Auth & Live Data",
+  "name": "mobidic",
+  "version": "11.0.0",
+  "description": "Mobidic — Web3 Community Platform for Artists, Investors & Developers",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
