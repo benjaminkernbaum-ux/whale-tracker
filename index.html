@@ -3087,217 +3087,65 @@ if(document.readyState === 'loading'){
   return;
 }
 
-/* ============ COMMUNITY DATA ============ */
-const PROJECTS_DATA = [
-  { id:'p1', name:'Bored Apes Yacht Club', cat:'nft_art', desc:'10,000 unique digital collectibles living on the Ethereum blockchain. Community-driven art project with utility and exclusive events.', chain:'Ethereum', website:'https://boredapeyachtclub.com', github:'', upvotes:842, featured:true, user:'0xBAYC', icon:'🎨' },
-  { id:'p2', name:'Uniswap V4', cat:'defi', desc:'The leading decentralized exchange protocol. V4 introduces hooks for customizable pool logic, enabling composable DeFi primitives.', chain:'Ethereum', website:'https://uniswap.org', github:'https://github.com/Uniswap', upvotes:1247, featured:true, user:'Hayden', icon:'🦄' },
-  { id:'p3', name:'Hardhat Framework', cat:'dev_tool', desc:'Ethereum development environment for professionals. Compile, deploy, test, and debug your smart contracts with ease.', chain:'Multi-chain', website:'https://hardhat.org', github:'https://github.com/NomicFoundation/hardhat', upvotes:934, featured:false, user:'NomicLabs', icon:'🛠️' },
-  { id:'p4', name:'MakerDAO', cat:'dao', desc:'Decentralized governance community managing the DAI stablecoin and the Maker Protocol on the Ethereum blockchain.', chain:'Ethereum', website:'https://makerdao.com', github:'https://github.com/makerdao', upvotes:712, featured:false, user:'MakerDAO', icon:'🏛️' },
-  { id:'p5', name:'Axie Infinity', cat:'gamefi', desc:'Play-to-earn game universe where players battle, breed, and trade fantasy creatures called Axies as NFTs.', chain:'Ronin', website:'https://axieinfinity.com', github:'', upvotes:528, featured:false, user:'SkyMavis', icon:'🎮' },
-  { id:'p6', name:'Jupiter Exchange', cat:'defi', desc:'Leading DEX aggregator on Solana. Offering the best swap rates, limit orders, DCA and perpetuals.', chain:'Solana', website:'https://jup.ag', github:'https://github.com/jup-ag', upvotes:673, featured:false, user:'Meow', icon:'🪐' },
-  { id:'p7', name:'Art Blocks', cat:'nft_art', desc:'Generative art platform where unique algorithmic artwork is minted on-chain. Home to Fidenzas, Chromie Squiggles, and more.', chain:'Ethereum', website:'https://artblocks.io', github:'', upvotes:461, featured:false, user:'SnowFro', icon:'🎭' },
-  { id:'p8', name:'Foundry', cat:'dev_tool', desc:'Blazing fast, portable, modular toolkit for Ethereum app development written in Rust. Used by top protocols.', chain:'Multi-chain', website:'https://getfoundry.sh', github:'https://github.com/foundry-rs', upvotes:889, featured:false, user:'Paradigm', icon:'⚒️' },
-];
-
-const STRATEGIES_DATA = [
-  { id:'s1', name:'BTC Accumulation DCA', cat:'dca', user:'whale_hunter', thesis:'Dollar-cost averaging into BTC weekly, regardless of price action. The macro thesis is simple: Bitcoin is digital gold and adoption is still early.', assets:['BTC'], timeframe:'Weekly', risk:'low', pnl30:12.4, pnl90:28.7, followers:342 },
-  { id:'s2', name:'SOL Momentum Swing', cat:'swing', user:'solana_chad', thesis:'Ride the SOL/USDT momentum on 4H chart. Enter on breakouts above key resistance with 2R minimum targets.', assets:['SOL','JUP'], timeframe:'4H-Daily', risk:'medium', pnl30:18.6, pnl90:42.1, followers:217 },
-  { id:'s3', name:'ETH Yield Maximizer', cat:'yield_farming', user:'defi_degen', thesis:'Rotate capital between top Ethereum yield protocols (Aave, Lido, EigenLayer) to maximize risk-adjusted yield.', assets:['ETH','stETH'], timeframe:'Weekly', risk:'medium', pnl30:4.8, pnl90:14.2, followers:189 },
-  { id:'s4', name:'NFT Blue-Chip Flip', cat:'nft_flipping', user:'nft_sniper', thesis:'Monitor whale wallets and sweep floors of blue-chip NFTs when they dip 30%+ from ATH. Flip on recovery.', assets:['BAYC','Pudgy','Azuki'], timeframe:'Daily', risk:'high', pnl30:-8.2, pnl90:34.6, followers:156 },
-  { id:'s5', name:'Altcoin Scalper', cat:'scalp', user:'1min_king', thesis:'Quick 1-3% scalps on high-volume altcoins during US market hours. Strict stop-losses and max 3 trades per day.', assets:['SOL','AVAX','LINK'], timeframe:'1m-5m', risk:'high', pnl30:22.1, pnl90:51.8, followers:423 },
-  { id:'s6', name:'Cross-DEX Arbitrage', cat:'arbitrage', user:'arb_bot_42', thesis:'Automated arbitrage between Uniswap, Sushiswap, and Curve pools. Captures pricing inefficiencies in real-time.', assets:['Multi'], timeframe:'Continuous', risk:'low', pnl30:3.2, pnl90:9.8, followers:98 },
-];
-
-const COMMUNITY_POSTS_DATA = [
-  { id:'cp1', user:'whale_hunter', avatar:'WH', content:'Just spotted a massive BTC accumulation pattern forming on the weekly. Institutions are loading up while retail is sleeping. This is the calm before the storm. 🐋💎', tags:['#BTC','#WhaleAlert'], reactions:{fire:124,whale:89,diamond:201,rocket:67}, comments:34, time:'2h ago' },
-  { id:'cp2', user:'nft_sniper', avatar:'NS', content:'New generative art drop on Art Blocks this Friday. The algorithm creates unique ocean-depth visuals — perfect for the Mobidic community! 🎨🌊', tags:['#NFT','#ArtBlocks'], reactions:{fire:56,whale:12,diamond:34,rocket:89}, comments:18, time:'4h ago' },
-  { id:'cp3', user:'defi_degen', avatar:'DD', content:'Yield farming update: Moved 80% of my ETH position from Lido to EigenLayer restaking. The risk-adjusted returns are significantly better right now. Full analysis thread below 👇', tags:['#DeFi','#Yield','#ETH'], reactions:{fire:201,whale:45,diamond:156,rocket:23}, comments:67, time:'6h ago' },
-  { id:'cp4', user:'solana_chad', avatar:'SC', content:'SOL just broke through $185 resistance with massive volume. My swing trade from $172 is printing. Taking 50% profit here, letting the rest ride with trailing stop at $180. 📈', tags:['#SOL','#Trading'], reactions:{fire:312,whale:78,diamond:89,rocket:245}, comments:52, time:'8h ago' },
-  { id:'cp5', user:'1min_king', avatar:'1K', content:'Today\'s scalping session: 5/5 wins, +4.2% on the day. The key was waiting for the US open volatility spike on AVAX. Patience pays. ⚡', tags:['#Scalping','#AVAX'], reactions:{fire:89,whale:23,diamond:45,rocket:12}, comments:21, time:'12h ago' },
-];
-
-/* ============ COMMUNITY RENDERERS ============ */
+/* ============ COMMUNITY — API-DRIVEN ============ */
 const communityState = { projCat:'all', stratCat:'all', stratSort:'pnl' };
+const catLabels = {nft_art:'NFT Art',defi:'DeFi',dev_tool:'Dev Tool',dao:'DAO',gamefi:'GameFi'};
+const catIcons = {nft_art:'🎨',defi:'💰',dev_tool:'🛠️',dao:'🏛️',gamefi:'🎮'};
+const stratCatLabels = {swing:'Swing',scalp:'Scalp',dca:'DCA',yield_farming:'Yield Farming',nft_flipping:'NFT Flipping',arbitrage:'Arbitrage'};
+async function apiFetch(u,o){try{const r=await fetch(u,o);return r.ok?await r.json():null}catch{return null}}
+function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return'now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
 
-function renderProjects(){
-  let list = PROJECTS_DATA;
-  if(communityState.projCat!=='all') list = list.filter(p=>p.cat===communityState.projCat);
-  const catLabels = {nft_art:'NFT Art',defi:'DeFi',dev_tool:'Dev Tool',dao:'DAO',gamefi:'GameFi',infrastructure:'Infra'};
-  const catIcons = {nft_art:'🎨',defi:'💰',dev_tool:'🛠️',dao:'🏛️',gamefi:'🎮',infrastructure:'⚙️'};
+async function renderProjects(){
+  const el=$('#projectsList');if(!el)return;
+  el.innerHTML='<div class="muted" style="text-align:center;padding:20px">Loading...</div>';
+  const data=await apiFetch('/api/projects?category='+communityState.projCat+'&sort=upvotes');
+  if(!data||!data.length){el.innerHTML='<div class="empty"><div class="em-ico">📦</div>No projects yet.</div>';return;}
+  el.innerHTML=data.map(function(p){return'<div class="project-card '+(p.featured?'featured':'')+'"><div class="pc-top"><div class="pc-icon '+p.category+'">'+(catIcons[p.category]||'📦')+'</div><div style="flex:1"><div class="pc-name">'+p.name+'</div><div class="pc-cat">'+(catLabels[p.category]||p.category)+' · by '+(p.author?.display_name||p.user_id)+'</div></div></div><div class="pc-desc">'+p.description+'</div><span class="pc-chain">⛓️ '+(p.chain||'')+'</span><div class="pc-footer"><div class="pc-vote" onclick="event.stopPropagation();upvoteProject(\''+p.id+'\')">▲ '+p.upvotes+'</div><div class="pc-links">'+(p.website?'<a href="'+p.website+'" target="_blank" onclick="event.stopPropagation()">🌐 Site</a>':'')+(p.github?'<a href="'+p.github+'" target="_blank" onclick="event.stopPropagation()">💻 GitHub</a>':'')+'</div></div></div>'}).join('');
+}
+async function upvoteProject(id){await apiFetch('/api/projects/'+id+'/upvote',{method:'POST',headers:{'Content-Type':'application/json'}});toast('Voted!','ok');renderProjects();}
+window.upvoteProject=upvoteProject;
 
-  if(!list.length){
-    $('#projectsList').innerHTML = `<div class="empty"><div class="em-ico">📦</div>No projects in this category yet.</div>`;
-    return;
+async function renderStrategies(){
+  const el=$('#strategiesList');if(!el)return;
+  el.innerHTML='<div class="muted" style="text-align:center;padding:20px">Loading...</div>';
+  const data=await apiFetch('/api/strategies?category='+communityState.stratCat+'&sort='+communityState.stratSort);
+  if(!data||!data.length){el.innerHTML='<div class="empty"><div class="em-ico">📊</div>No strategies yet.</div>';return;}
+  el.innerHTML=data.map(function(s){return'<div class="strat-card"><div class="sc-top"><div class="sc-avatar">'+(s.author?.display_name||s.user_id).slice(0,2).toUpperCase()+'</div><div style="flex:1"><div class="sc-name">'+s.name+'</div><div class="sc-user">by @'+(s.author?.display_name||s.user_id)+' · '+s.timeframe+'</div></div></div><div class="sc-thesis">"'+s.thesis+'"</div><div class="sc-meta"><span class="sc-tag '+s.category+'">'+(stratCatLabels[s.category]||s.category)+'</span><span class="sc-risk '+s.risk_level+'">'+(s.risk_level||'medium').toUpperCase()+' RISK</span>'+(s.assets||[]).map(function(a){return'<span class="sc-tag">'+a+'</span>'}).join('')+'</div><div class="sc-perf"><div class="sp"><div class="l">30d P&L</div><div class="v '+(s.pnl_30d>=0?'up':'dn')+'">'+(s.pnl_30d>=0?'+':'')+s.pnl_30d+'%</div></div><div class="sp"><div class="l">90d P&L</div><div class="v '+(s.pnl_90d>=0?'up':'dn')+'">'+(s.pnl_90d>=0?'+':'')+s.pnl_90d+'%</div></div><div class="sp"><div class="l">Followers</div><div class="v">'+s.followers_count+'</div></div></div><div class="sc-footer"><button class="sc-follow" onclick="event.stopPropagation();followStrategy(\''+s.id+'\')">Follow</button><span class="sc-followers">'+s.followers_count+' following</span></div></div>'}).join('');
+}
+async function followStrategy(id){await apiFetch('/api/strategies/'+id+'/follow',{method:'POST',headers:{'Content-Type':'application/json'}});toast('Updated!','ok');renderStrategies();}
+window.followStrategy=followStrategy;
+
+async function renderCommunityFeed(){
+  const sf=$('#socialFeed');if(!sf)return;
+  var comp='<div class="composer"><div class="c-av">🐋</div><div style="flex:1"><textarea class="c-input" id="postInput" placeholder="Share your alpha..."></textarea><div class="c-actions"><button class="c-post" id="postBtn">Post</button></div></div></div>';
+  sf.innerHTML=comp+'<div class="muted" style="text-align:center;padding:12px">Loading feed...</div>';
+  const data=await apiFetch('/api/posts');
+  var html=(data||[]).map(function(p){return'<div class="post" style="margin-bottom:12px"><div class="pav">'+(p.author?.display_name||p.user_id).slice(0,2).toUpperCase()+'</div><div class="content"><div class="hd"><span class="u">@'+(p.author?.display_name||p.user_id)+'</span><span class="su">· '+timeAgo(p.created_at)+'</span></div><div class="bd">'+p.content+'</div><div class="tags" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'+(p.tags||[]).map(function(t){return'<span style="font-size:11px;color:#c084fc">#'+t+'</span>'}).join('')+'</div><div class="reactions"><button onclick="reactPost(\''+p.id+'\',\'fire\')">🔥 '+(p.reactions?.fire||0)+'</button><button onclick="reactPost(\''+p.id+'\',\'whale\')">🐋 '+(p.reactions?.whale||0)+'</button><button onclick="reactPost(\''+p.id+'\',\'diamond\')">💎 '+(p.reactions?.diamond||0)+'</button><button onclick="reactPost(\''+p.id+'\',\'rocket\')">🚀 '+(p.reactions?.rocket||0)+'</button><button style="margin-left:auto">💬 '+(p.comments_count||0)+'</button></div></div></div>'}).join('');
+  sf.innerHTML=comp+html;
+  setTimeout(function(){$('#postBtn')?.addEventListener('click',async function(){var inp=$('#postInput'),txt=inp?.value?.trim();if(!txt){toast('Write something!','err');return;}var r=await apiFetch('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:txt,tags:[]})});if(r){inp.value='';toast('Posted! 🐋','ok');renderCommunityFeed();}});},50);
+}
+async function reactPost(id,type){await apiFetch('/api/posts/'+id+'/react',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type})});renderCommunityFeed();}
+window.reactPost=reactPost;
+
+async function renderProfile(){
+  var d=await apiFetch('/api/profile/demo_user');
+  if(d){
+    if($('#profileName'))$('#profileName').textContent=d.display_name||'Guest';
+    if($('#profileRole'))$('#profileRole').textContent=d.role||'Explorer';
+    if($('#profileBio'))$('#profileBio').textContent=d.bio||'';
+    if($('#profFollowers'))$('#profFollowers').textContent=d.followers_count||0;
+    if($('#profFollowing'))$('#profFollowing').textContent=d.following_count||0;
+    if($('#profReputation'))$('#profReputation').textContent=d.reputation||0;
+    if($('#profProjects'))$('#profProjects').textContent=d.projects_count||0;
+    var bMap={whale:'🐋 Whale',investor:'💰 Investor',developer:'💻 Dev',early_adopter:'⚡ Early Adopter'};
+    if($('#profileBadges'))$('#profileBadges').innerHTML=(d.badges||[]).map(function(b){return'<span class="badge '+b+'">'+(bMap[b]||b)+'</span>'}).join('');
   }
-
-  $('#projectsList').innerHTML = list.map(p=>`
-    <div class="project-card ${p.featured?'featured':''}">
-      <div class="pc-top">
-        <div class="pc-icon ${p.cat}">${p.icon||catIcons[p.cat]||'📦'}</div>
-        <div style="flex:1">
-          <div class="pc-name">${p.name}</div>
-          <div class="pc-cat">${catLabels[p.cat]||p.cat} · by ${p.user}</div>
-        </div>
-      </div>
-      <div class="pc-desc">${p.desc}</div>
-      <span class="pc-chain">⛓️ ${p.chain}</span>
-      <div class="pc-footer">
-        <div class="pc-vote" onclick="event.stopPropagation();upvoteProject('${p.id}')">▲ ${p.upvotes}</div>
-        <div class="pc-links">
-          ${p.website?`<a href="${p.website}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🌐 Site</a>`:''}
-          ${p.github?`<a href="${p.github}" target="_blank" rel="noopener" onclick="event.stopPropagation()">💻 GitHub</a>`:''}
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function upvoteProject(id){
-  const p = PROJECTS_DATA.find(x=>x.id===id);
-  if(p){ p.upvotes++; renderProjects(); toast('Upvoted!','ok'); }
-}
-window.upvoteProject = upvoteProject;
-
-function renderStrategies(){
-  let list = [...STRATEGIES_DATA];
-  if(communityState.stratCat!=='all') list = list.filter(s=>s.cat===communityState.stratCat);
-  if(communityState.stratSort==='pnl') list.sort((a,b)=>b.pnl90-a.pnl90);
-  else if(communityState.stratSort==='followers') list.sort((a,b)=>b.followers-a.followers);
-
-  const catLabels = {swing:'Swing',scalp:'Scalp',dca:'DCA',yield_farming:'Yield Farming',nft_flipping:'NFT Flipping',arbitrage:'Arbitrage'};
-
-  if(!list.length){
-    $('#strategiesList').innerHTML = `<div class="empty"><div class="em-ico">📊</div>No strategies in this category yet.</div>`;
-    return;
-  }
-
-  $('#strategiesList').innerHTML = list.map(s=>`
-    <div class="strat-card">
-      <div class="sc-top">
-        <div class="sc-avatar">${s.user.slice(0,2).toUpperCase()}</div>
-        <div style="flex:1">
-          <div class="sc-name">${s.name}</div>
-          <div class="sc-user">by @${s.user} · ${s.timeframe}</div>
-        </div>
-      </div>
-      <div class="sc-thesis">"${s.thesis}"</div>
-      <div class="sc-meta">
-        <span class="sc-tag ${s.cat}">${catLabels[s.cat]||s.cat}</span>
-        <span class="sc-risk ${s.risk}">${s.risk.toUpperCase()} RISK</span>
-        ${s.assets.map(a=>`<span class="sc-tag">${a}</span>`).join('')}
-      </div>
-      <div class="sc-perf">
-        <div class="sp"><div class="l">30d P&L</div><div class="v ${s.pnl30>=0?'up':'dn'}">${s.pnl30>=0?'+':''}${s.pnl30}%</div></div>
-        <div class="sp"><div class="l">90d P&L</div><div class="v ${s.pnl90>=0?'up':'dn'}">${s.pnl90>=0?'+':''}${s.pnl90}%</div></div>
-        <div class="sp"><div class="l">Followers</div><div class="v">${s.followers}</div></div>
-      </div>
-      <div class="sc-footer">
-        <button class="sc-follow" onclick="event.stopPropagation();followStrategy('${s.id}')">Follow</button>
-        <span class="sc-followers">${s.followers} following this strategy</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-function followStrategy(id){
-  const s = STRATEGIES_DATA.find(x=>x.id===id);
-  if(s){ s.followers++; renderStrategies(); toast('Now following this strategy','ok'); }
-}
-window.followStrategy = followStrategy;
-
-function renderCommunityFeed(){
-  const composer = `<div class="composer">
-    <div class="c-av">🐋</div>
-    <div style="flex:1">
-      <textarea class="c-input" id="postInput" placeholder="What's happening in Web3? Share your alpha..."></textarea>
-      <div class="c-actions">
-        <button class="c-post" id="postBtn">Post</button>
-      </div>
-    </div>
-  </div>`;
-
-  const posts = COMMUNITY_POSTS_DATA.map(p=>`
-    <div class="post" style="margin-bottom:12px">
-      <div class="pav">${p.avatar}</div>
-      <div class="content">
-        <div class="hd"><span class="u">@${p.user}</span><span class="su">· ${p.time}</span></div>
-        <div class="bd">${p.content}</div>
-        <div class="tags" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${p.tags.map(t=>`<span style="font-size:11px;color:#c084fc">${t}</span>`).join('')}</div>
-        <div class="reactions">
-          <button onclick="reactPost('${p.id}','fire')">🔥 ${p.reactions.fire}</button>
-          <button onclick="reactPost('${p.id}','whale')">🐋 ${p.reactions.whale}</button>
-          <button onclick="reactPost('${p.id}','diamond')">💎 ${p.reactions.diamond}</button>
-          <button onclick="reactPost('${p.id}','rocket')">🚀 ${p.reactions.rocket}</button>
-          <button style="margin-left:auto">💬 ${p.comments}</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  // Insert composer before the existing social feed on the home/feed screen
-  const socialFeed = $('#socialFeed');
-  if(socialFeed) socialFeed.innerHTML = composer + posts;
-
-  // Wire post button
-  setTimeout(()=>{
-    $('#postBtn')?.addEventListener('click',()=>{
-      const input = $('#postInput');
-      const text = input?.value?.trim();
-      if(!text){ toast('Write something first!','err'); return; }
-      COMMUNITY_POSTS_DATA.unshift({
-        id:'cp'+Date.now(), user:'you', avatar:'YO',
-        content:text, tags:[], reactions:{fire:0,whale:0,diamond:0,rocket:0},
-        comments:0, time:'Just now'
-      });
-      input.value='';
-      renderCommunityFeed();
-      toast('Posted to the community! 🐋','ok');
-    });
-  },50);
-}
-
-function reactPost(id, type){
-  const p = COMMUNITY_POSTS_DATA.find(x=>x.id===id);
-  if(p){ p.reactions[type]++; renderCommunityFeed(); }
-}
-window.reactPost = reactPost;
-
-function renderProfile(){
-  const badges = [
-    {type:'whale',label:'🐋 Whale'},
-    {type:'investor',label:'💰 Investor'},
-    {type:'early_adopter',label:'⚡ Early Adopter'},
-  ];
-  $('#profileBadges').innerHTML = badges.map(b=>`<span class="badge ${b.type}">${b.label}</span>`).join('');
-
-  const socialLinks = [
-    {label:'𝕏 Twitter',url:'#'},
-    {label:'💬 Discord',url:'#'},
-    {label:'💻 GitHub',url:'#'},
-  ];
-  $('#profileSocial').innerHTML = socialLinks.map(l=>`<a href="${l.url}">${l.label}</a>`).join('');
-
-  // Profile strategies
-  const myStrats = STRATEGIES_DATA.slice(0,2);
-  $('#profileStrategies').innerHTML = myStrats.length
-    ? myStrats.map(s=>`<div class="strat-card" style="margin-bottom:8px">
-        <div class="sc-top"><div class="sc-avatar">${s.user.slice(0,2).toUpperCase()}</div><div style="flex:1"><div class="sc-name">${s.name}</div><div class="sc-user">${s.cat} · ${s.pnl90>=0?'+':''}${s.pnl90}% (90d)</div></div></div>
-      </div>`).join('')
-    : `<div class="empty"><div class="em-ico">📊</div>No strategies shared yet.</div>`;
-
-  // Profile projects
-  const myProjects = PROJECTS_DATA.slice(0,2);
-  $('#profileProjects').innerHTML = myProjects.length
-    ? myProjects.map(p=>`<div class="project-card" style="margin-bottom:8px">
-        <div class="pc-top"><div class="pc-icon ${p.cat}">${p.icon||'📦'}</div><div style="flex:1"><div class="pc-name">${p.name}</div><div class="pc-cat">${p.cat}</div></div></div>
-      </div>`).join('')
-    : `<div class="empty"><div class="em-ico">🎨</div>No projects submitted yet.</div>`;
-
-  // Profile watchlist
-  const wlItems = ASSETS.filter(a=>state.watchlist.has(a.sym));
-  $('#profileWatchlist').innerHTML = wlItems.length
-    ? wlItems.map(assetRowHtml).join('')
-    : `<div class="empty"><div class="em-ico">⭐</div>No assets in watchlist.</div>`;
+  var strats=await apiFetch('/api/strategies?sort=pnl');
+  if($('#profileStrategies'))$('#profileStrategies').innerHTML=(strats||[]).slice(0,3).map(function(s){return'<div class="strat-card" style="margin-bottom:8px"><div class="sc-top"><div class="sc-avatar">'+(s.author?.display_name||'').slice(0,2).toUpperCase()+'</div><div style="flex:1"><div class="sc-name">'+s.name+'</div><div class="sc-user">'+s.category+' · '+(s.pnl_90d>=0?'+':'')+s.pnl_90d+'%</div></div></div></div>'}).join('')||'<div class="empty"><div class="em-ico">📊</div>No strategies.</div>';
+  var projs=await apiFetch('/api/projects?sort=upvotes');
+  if($('#profileProjects'))$('#profileProjects').innerHTML=(projs||[]).slice(0,3).map(function(p){return'<div class="project-card" style="margin-bottom:8px"><div class="pc-top"><div class="pc-icon '+p.category+'">'+(catIcons[p.category]||'📦')+'</div><div style="flex:1"><div class="pc-name">'+p.name+'</div><div class="pc-cat">'+(catLabels[p.category]||p.category)+'</div></div></div></div>'}).join('')||'<div class="empty"><div class="em-ico">🎨</div>No projects.</div>';
+  var wl=ASSETS.filter(function(a){return state.watchlist.has(a.sym)});
+  if($('#profileWatchlist'))$('#profileWatchlist').innerHTML=wl.length?wl.map(assetRowHtml).join(''):'<div class="empty"><div class="em-ico">⭐</div>No watchlist.</div>';
   wireAssetRows('#profileWatchlist');
 }
 
